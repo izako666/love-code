@@ -1,0 +1,100 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import 'package:love_code/firebase_options.dart';
+import 'package:love_code/navigation/routes.dart';
+import 'package:love_code/portable_api/auth/auth.dart';
+import 'package:love_code/portable_api/networking/firestore_handler.dart';
+import 'package:love_code/state_management/splash_controller.dart';
+
+import 'package:love_code/ui/entrance/splash_screen.dart';
+import 'package:love_code/ui/theme.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  //Get Controller Init
+  Get.put<Auth>(Auth());
+  Get.put<FirestoreHandler>(FirestoreHandler());
+  Get.put<SplashController>(SplashController());
+  runApp(const MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  User? prevUser;
+  @override
+  void initState() {
+    super.initState();
+    prevUser = Auth.instance().user.value;
+    if (prevUser != null) {
+      // WidgetsBinding.instance.addPostFrameCallback((_) {
+      //   Get.toNamed(RouteConstants.home);
+      // });
+      Get.find<SplashController>().loading.listen((val) {
+        if (!val) {
+          Get.toNamed(RouteConstants.home);
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScreenUtilInit(
+      designSize: const Size(360, 690),
+      child: GetMaterialApp(
+        title: 'Love Code',
+        theme: AppTheme.theme,
+        builder: (context, child) {
+          return StreamBuilder<User?>(
+              initialData: prevUser,
+              stream: Auth.instance().user.stream,
+              builder: (context, snapshot) {
+                if (snapshot.hasData && prevUser == null) {
+                  prevUser = snapshot.data;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Get.toNamed(RouteConstants.home);
+                  });
+                } else if (!snapshot.hasData && prevUser != null) {
+                  prevUser = null;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Get.toNamed(RouteConstants.authInit);
+                  });
+                }
+                return child!;
+              });
+        },
+        home: const MyHomePage(title: 'Love Code'),
+        initialRoute: '/',
+        getPages: AppRoutes.pages,
+        debugShowCheckedModeBanner: false,
+      ),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
+
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  @override
+  Widget build(BuildContext context) {
+    return const SplashScreen();
+  }
+}
