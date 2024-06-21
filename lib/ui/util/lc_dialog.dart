@@ -51,6 +51,7 @@ class LcDialog extends StatelessWidget {
             if (title != null) ...[
               Text(
                 title!,
+                textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium,
               )
             ],

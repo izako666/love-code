@@ -39,7 +39,11 @@ class FirestoreHandler extends GetxController {
         .add({
       'message': message.message,
       'timestamp': Timestamp.fromDate(message.timeStamp),
-      'sender_id': message.senderId
+      'sender_id': message.senderId,
+      if (message.replyToRef != null) ...{
+        'reply_to_message': message.replyToRef!.message,
+        'reply_to_date': Timestamp.fromDate(message.replyToRef!.timeStamp)
+      }
     });
   }
 
@@ -57,7 +61,7 @@ class FirestoreHandler extends GetxController {
     List<Message> messages = List.empty(growable: true);
     for (int i = 0; i < snap.docs.length; i++) {
       var data = snap.docs[i].data();
-      messages.add(Message.fromData(data));
+      messages.add(Message.fromData(data, snap.docs[i].id));
     }
     return messages;
   }
@@ -78,5 +82,31 @@ class FirestoreHandler extends GetxController {
     }, onDone: () {
       Get.log('message stream finished');
     });
+  }
+
+  Future<void> deleteMessage(chatId, Message message) async {
+    await db
+        .collection(Constants.fireStoreRooms)
+        .doc(chatId)
+        .collection(Constants.msgBox)
+        .doc(message.messageId)
+        .delete();
+  }
+
+  Future<void> editMessage(chatId, Message message, String newMessage) async {
+    await db
+        .collection(Constants.fireStoreRooms)
+        .doc(chatId)
+        .collection(Constants.msgBox)
+        .doc(message.messageId)
+        .update({'message': newMessage});
+  }
+
+  DocumentReference getDocRef(String chatId, String msgId) {
+    return db
+        .collection(Constants.fireStoreRooms)
+        .doc(chatId)
+        .collection(Constants.msgBox)
+        .doc(msgId);
   }
 }

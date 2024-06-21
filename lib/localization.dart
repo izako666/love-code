@@ -26,4 +26,10 @@ class Localization {
   static const oops = 'Oops';
 
   static const menu = 'Menu';
+  static const reply = 'Reply';
+  static const edit = 'Edit';
+  static const copy = 'Copy';
+  static const delete = 'Delete';
+  static const deleteMessage = 'Are you sure you want to delete this message?';
+  static const cancel = 'Cancel';
 }
