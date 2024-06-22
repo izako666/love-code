@@ -24,7 +24,7 @@ class Localization {
   static const invalidEmail = 'The email you entered is invalid';
   static const noAccount = "Don't have an account? Click here.";
   static const oops = 'Oops';
-
+  static const smthnBad = 'Something bad happened, please try again later';
   static const menu = 'Menu';
   static const reply = 'Reply';
   static const edit = 'Edit';
@@ -32,4 +32,16 @@ class Localization {
   static const delete = 'Delete';
   static const deleteMessage = 'Are you sure you want to delete this message?';
   static const cancel = 'Cancel';
+
+  static const makeRoom = 'Find a room';
+  static const confirmRoomCode = 'Confirm Room Code';
+  static const createRoomCode = 'You can also create your own code to share';
+  static const expiredCode =
+      'The code you used is expired, please use a different one';
+  static const fillAllFields = 'Please fill all text fields';
+  static const success = 'Success!';
+  static const copiedToClipboard = 'Text was copied to clipboard';
+  static const disconnectChat = 'Disconnect From Chat Room';
+  static const confirmDecision = 'Please confirm your decision.';
+  static const disconnect = 'Disconnect';
 }

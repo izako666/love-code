@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
+import 'package:love_code/portable_api/chat/state/chat_controller.dart';
 import 'package:love_code/ui/helper/ui_helper.dart';
 import 'package:love_code/ui/theme.dart';
 import 'package:love_code/ui/util/lc_button.dart';
@@ -49,11 +50,37 @@ class LcMenuDrawer extends StatelessWidget {
               title: Text('Example3'),
             ),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(left: 8.0, bottom: 16),
             child: ListTile(
-              leading: Icon(Icons.house),
-              title: Text('Example4'),
+              leading: Icon(Icons.close),
+              title: Text(Localization.disconnectChat),
+              onTap: () {
+                showLcDialog(
+                    title: Localization.disconnectChat,
+                    desc: Localization.confirmDecision,
+                    actions: [
+                      LcButton(
+                        width: 75.w,
+                        height: 35.w,
+                        text: Localization.disconnect,
+                        onPressed: () {
+                          ChatController.instance().deleteChat();
+
+                          Navigator.pop(context);
+                        },
+                      ),
+                      const SizedBox(width: 16),
+                      LcButton(
+                        width: 75.w,
+                        height: 35.w,
+                        text: Localization.cancel,
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      )
+                    ]);
+              },
             ),
           ),
           const Divider(),
@@ -65,7 +92,7 @@ class LcMenuDrawer extends StatelessWidget {
               onTap: () {
                 showLcDialog(
                     title: Localization.signOut,
-                    desc: 'Please confirm your decision.',
+                    desc: Localization.confirmDecision,
                     actions: [
                       LcButton(
                         width: 75.w,

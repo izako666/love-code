@@ -35,7 +35,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     _controller = TextEditingController();
-    chatController = Get.put<ChatController>(ChatController());
+    chatController = Get.find<ChatController>();
     super.initState();
   }
 
@@ -141,7 +141,9 @@ class _ChatScreenState extends State<ChatScreen> {
                                             onPressed: () {
                                               FirestoreHandler.instance()
                                                   .deleteMessage(
-                                                      'U9YSnKNBEFpATnRM2Y9R',
+                                                      ChatController.instance()
+                                                          .chatRoom
+                                                          .value!,
                                                       msg);
                                               Navigator.pop(context);
                                             },
@@ -220,8 +222,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _handleEdit(Message editMsg) {
-    FirestoreHandler.instance()
-        .editMessage('U9YSnKNBEFpATnRM2Y9R', editMsg, _controller.text);
+    FirestoreHandler.instance().editMessage(
+        ChatController.instance().chatRoom.value!, editMsg, _controller.text);
     replyMessage = null;
     editMessage = null;
     _controller.clear();
@@ -234,7 +236,7 @@ class _ChatScreenState extends State<ChatScreen> {
       senderId: Auth.instance().user.value!.uid,
       replyToRef: replyMessage,
       timeStamp: DateTime.now(),
-    ).sendMessage('U9YSnKNBEFpATnRM2Y9R');
+    ).sendMessage(ChatController.instance().chatRoom.value!);
     _controller.clear();
     replyMessage = null;
     editMessage = null;

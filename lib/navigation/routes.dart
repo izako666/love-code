@@ -1,5 +1,7 @@
 import 'package:get/get_navigation/src/routes/get_route.dart';
-import 'package:love_code/ui/chat/widgets/chats.dart';
+import 'package:love_code/ui/chat/chats.dart';
+import 'package:love_code/ui/chat/home_loading.dart';
+import 'package:love_code/ui/chat/make_room.dart';
 import 'package:love_code/ui/entrance/auth_init.dart';
 import 'package:love_code/ui/entrance/sign_in.dart';
 import 'package:love_code/ui/entrance/sign_up.dart';
@@ -21,13 +23,17 @@ class AppRoutes {
                     page: () => const SignUpScreen())
               ]),
         ]),
-    GetPage(name: RouteConstants.home, page: () => const ChatScreen())
+    GetPage(name: RouteConstants.home, page: () => const HomeLoadingScreen()),
+    GetPage(name: RouteConstants.chats, page: () => const ChatScreen()),
+    GetPage(name: RouteConstants.makeRoom, page: () => const MakeRoomScreen())
   ];
 }
 
 class RouteConstants {
   static const splash = '/';
   static const home = '/home';
+  static const chats = '/chats';
+  static const makeRoom = '/make_room';
   static const authInit = '/auth_init';
   static const signIn = '/sign_in';
   static const signUpEmail = '/sign_up_email';

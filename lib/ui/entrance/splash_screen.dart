@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/navigation/routes.dart';
+import 'package:love_code/portable_api/local_data/local_data.dart';
 import 'package:love_code/resources.dart';
 import 'package:love_code/state_management/splash_controller.dart';
 import 'package:love_code/ui/helper/ui_helper.dart';
@@ -25,7 +26,13 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     //loading stuff
-    Future.delayed(const Duration(seconds: 10), () {
+    setupApp();
+  }
+
+  Future<void> setupApp() async {
+    //loading stuff
+    await LocalDataHandler.initDataHandler();
+    Future.delayed(const Duration(seconds: 2), () {
       loading = false;
 
       setState(() {});
