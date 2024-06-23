@@ -6,6 +6,7 @@ import 'package:love_code/localization.dart';
 import 'package:love_code/navigation/routes.dart';
 import 'package:love_code/portable_api/local_data/local_data.dart';
 import 'package:love_code/resources.dart';
+import 'package:love_code/state_management/onboarding_controller.dart';
 import 'package:love_code/state_management/splash_controller.dart';
 import 'package:love_code/ui/helper/ui_helper.dart';
 import 'package:love_code/ui/theme.dart';
@@ -32,12 +33,17 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> setupApp() async {
     //loading stuff
     await LocalDataHandler.initDataHandler();
+    OnboardingController onboardingController =
+        Get.put<OnboardingController>(OnboardingController());
     Future.delayed(const Duration(seconds: 2), () {
       loading = false;
 
       setState(() {});
-
-      Get.toNamed(RouteConstants.authInit);
+      if (!onboardingController.seenOnboarding.value) {
+        Get.toNamed(RouteConstants.onBoarding);
+      } else {
+        Get.toNamed(RouteConstants.authInit);
+      }
       Get.find<SplashController>().loading.value = false;
     });
   }

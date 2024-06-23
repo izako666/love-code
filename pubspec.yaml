@@ -44,6 +44,7 @@ dependencies:
   dartz: ^0.10.1
   popover: ^0.3.0+1
   shared_preferences: ^2.2.3
+  page_view_dot_indicator: ^2.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

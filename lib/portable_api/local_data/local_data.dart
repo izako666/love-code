@@ -21,7 +21,8 @@ class LocalDataHandler {
     }
   }
 
-  static dynamic readData(String key) {
-    return prefs.get(key);
+  static T readData<T>(String key, T def) {
+    Object? value = prefs.get(key);
+    return value != null ? (value as T) : def;
   }
 }
