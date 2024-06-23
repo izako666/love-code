@@ -16,7 +16,7 @@ class Auth extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    googleSignIn = GoogleSignIn(scopes: Constants.google_scopes);
+    googleSignIn = GoogleSignIn(scopes: Constants.googleScopes);
     _instance.authStateChanges().listen((u) {
       user.value = u;
     });

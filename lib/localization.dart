@@ -44,4 +44,11 @@ class Localization {
   static const disconnectChat = 'Disconnect From Chat Room';
   static const confirmDecision = 'Please confirm your decision.';
   static const disconnect = 'Disconnect';
+
+  static const onboarding_1 =
+      'Welcome to LoveCode, the app where you can intimately speak to your partner, away from all the noise.';
+  static const onboarding_2 =
+      'Here you can chat normally, or use fun commands to spice up the conversation.';
+  static const onboarding_3 =
+      'The options are endless, are you ready? Click on Go!';
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -293,14 +292,14 @@ class OTPTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Container(
         width: 45.w,
         height: 45.w,
         decoration: BoxDecoration(
             color: Colors.transparent,
             border: Border.all(color: secondaryColor, width: 2),
-            borderRadius: BorderRadius.all(Radius.circular(24))),
+            borderRadius: const BorderRadius.all(Radius.circular(24))),
         child: Align(
           alignment: Alignment.center,
           child: TextField(

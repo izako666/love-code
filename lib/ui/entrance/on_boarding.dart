@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/route_manager.dart';
+import 'package:love_code/localization.dart';
 import 'package:love_code/navigation/routes.dart';
 import 'package:love_code/portable_api/local_data/local_data.dart';
 import 'package:love_code/ui/util/lc_app_bar.dart';
@@ -29,11 +30,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       Container(color: Colors.red, width: 0.8.sw, height: 0.4.sh),
     ];
     text = const [
-      Text(
-          'Welcome to LoveCode, the app where you can intimately speak to your partner, away from all the noise.'),
-      Text(
-          'Here you can chat normally, or use fun commands to spice up the conversation.'),
-      Text('The options are endless, are you ready? Click on Go!')
+      Text(Localization.onboarding_1),
+      Text(Localization.onboarding_2),
+      Text(Localization.onboarding_3)
     ];
     selectedPage = 0;
     _pageController = PageController(initialPage: selectedPage);
@@ -43,7 +42,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return LcScaffold(
         extendBodyBehindAppBar: true,
-        appBar: LcAppBar(
+        appBar: const LcAppBar(
           automaticallyImplyLeading: false,
         ),
         body: PageView.builder(
@@ -56,15 +55,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             itemBuilder: (ctx, index) {
               return Column(
                 children: [
-                  SizedBox(height: kToolbarHeight * 2),
+                  const SizedBox(height: kToolbarHeight * 2),
                   images[index],
-                  SizedBox(
+                  const SizedBox(
                     height: 32,
                   ),
                   Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 64),
+                      padding: const EdgeInsets.symmetric(horizontal: 64),
                       child: text[index]),
-                  SizedBox(
+                  const SizedBox(
                     height: 16,
                   ),
                   Padding(
@@ -86,7 +85,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   if (index == 2) ...[
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     LcButton(
                       text: 'Go',
                       onPressed: () {

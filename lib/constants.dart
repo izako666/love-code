@@ -4,7 +4,7 @@ class Constants {
   static const fireStoreUsers = 'users';
   static const fireStoreCodes = 'codes';
 
-  static const google_scopes = [
+  static const googleScopes = [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile'
   ];

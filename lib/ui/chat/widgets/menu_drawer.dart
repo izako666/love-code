@@ -51,10 +51,10 @@ class LcMenuDrawer extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: EdgeInsets.only(left: 8.0, bottom: 16),
+            padding: const EdgeInsets.only(left: 8.0, bottom: 16),
             child: ListTile(
-              leading: Icon(Icons.close),
-              title: Text(Localization.disconnectChat),
+              leading: const Icon(Icons.close),
+              title: const Text(Localization.disconnectChat),
               onTap: () {
                 showLcDialog(
                     title: Localization.disconnectChat,

@@ -46,8 +46,8 @@ class MessageWidget extends StatelessWidget {
                       child: Column(
                         children: [
                           ListTile(
-                            title: Text(Localization.reply),
-                            trailing: Icon(Icons.reply),
+                            title: const Text(Localization.reply),
+                            trailing: const Icon(Icons.reply),
                             onTap: () {
                               if (onReplyTap != null) onReplyTap!();
                               Navigator.pop(ctx);
@@ -56,8 +56,8 @@ class MessageWidget extends StatelessWidget {
                           if (msg.senderId ==
                               Auth.instance().user.value!.uid) ...[
                             ListTile(
-                              title: Text(Localization.edit),
-                              trailing: Icon(Icons.edit),
+                              title: const Text(Localization.edit),
+                              trailing: const Icon(Icons.edit),
                               onTap: () {
                                 if (onEditTap != null) onEditTap!();
 
@@ -66,8 +66,8 @@ class MessageWidget extends StatelessWidget {
                             )
                           ],
                           ListTile(
-                            title: Text(Localization.copy),
-                            trailing: Icon(Icons.copy),
+                            title: const Text(Localization.copy),
+                            trailing: const Icon(Icons.copy),
                             onTap: () {
                               if (onCopyTap != null) onCopyTap!();
 
@@ -77,8 +77,8 @@ class MessageWidget extends StatelessWidget {
                           if (msg.senderId ==
                               Auth.instance().user.value!.uid) ...[
                             ListTile(
-                              title: Text(Localization.delete),
-                              trailing: Icon(Icons.delete),
+                              title: const Text(Localization.delete),
+                              trailing: const Icon(Icons.delete),
                               onTap: () {
                                 Navigator.pop(ctx);
                                 if (onDeleteTap != null) onDeleteTap!();
@@ -96,7 +96,7 @@ class MessageWidget extends StatelessWidget {
           color: Colors.transparent,
         ),
         child: Row(children: [
-          Container(
+          SizedBox(
             width: isReply ? screenWidth - 100 : screenWidth * 0.3,
             child: Text(
               msg.message,
