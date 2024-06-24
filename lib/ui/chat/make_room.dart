@@ -4,10 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:love_code/localization.dart';
+import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/state/chat_controller.dart';
+import 'package:love_code/ui/chat/widgets/menu_drawer.dart';
 import 'package:love_code/ui/theme.dart';
 import 'package:love_code/ui/util/lc_app_bar.dart';
 import 'package:love_code/ui/util/lc_button.dart';
+import 'package:love_code/ui/util/lc_dialog.dart';
 import 'package:love_code/ui/util/lc_scaffold.dart';
 
 class MakeRoomScreen extends StatefulWidget {
@@ -31,10 +34,42 @@ class _MakeRoomScreenState extends State<MakeRoomScreen> {
   late final FocusNode _node5;
   late final FocusNode _node6;
   List<String> myKeys = List.filled(6, '');
+  final GlobalKey<ScaffoldState> _key = GlobalKey();
   String? roomCode;
   @override
   void initState() {
     super.initState();
+    if (Auth.instance().queueVerify.value) {
+      Auth.instance().queueVerify.value = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showLcDialog(
+            title: Localization.plsVerifyEmail,
+            desc: Localization.needToConfirmYou,
+            actions: [
+              LcButton(
+                width: 75.w,
+                height: 35.w,
+                text: Localization.verify,
+                onPressed: () async {
+                  Auth.instance().sendEmailVerification().whenComplete(() {
+                    Get.snackbar(
+                        Localization.success, Localization.emailVerifySent,
+                        snackPosition: SnackPosition.BOTTOM);
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              LcButton(
+                width: 75.w,
+                height: 35.w,
+                text: Localization.later,
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              )
+            ]);
+      });
+    }
     ChatController.instance().hookInChatroomCheck();
     _controller1 = TextEditingController();
     _controller2 = TextEditingController();
@@ -152,10 +187,17 @@ class _MakeRoomScreenState extends State<MakeRoomScreen> {
   @override
   Widget build(BuildContext context) {
     return LcScaffold(
+      scaffoldKey: _key,
       extendBodyBehindAppBar: true,
       resizeToAvoidBottomInset: true,
+      drawer: const LcMenuDrawer(),
       appBar: LcAppBar(
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            _key.currentState!.openDrawer();
+          },
+        ),
         title: Text(Localization.makeRoom,
             style: Theme.of(context).textTheme.headlineLarge!),
       ),

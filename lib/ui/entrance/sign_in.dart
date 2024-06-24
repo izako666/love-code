@@ -153,6 +153,25 @@ class _SignInScreenState extends State<SignInScreen> {
                       .bodySmall!
                       .copyWith(color: hintColor),
                 ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  bool emailErr = _emailKey.currentState!.validate();
+                  if (emailErr) {
+                    await Auth.instance()
+                        .sendResetPassword(_emailController.text);
+                    Get.snackbar(
+                        Localization.success, Localization.resetEmailSent,
+                        snackPosition: SnackPosition.BOTTOM);
+                  }
+                },
+                child: Text(
+                  Localization.forgotPassword,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall!
+                      .copyWith(color: hintColor),
+                ),
               )
             ],
           ),

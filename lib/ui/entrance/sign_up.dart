@@ -217,7 +217,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         _passwordController.text,
                         _userNameController.text);
                     result.fold((user) {
-                      Get.snackbar('Success', 'yay');
+                      Auth.instance().queueVerifyDialog();
                     }, (text) => Get.snackbar(Localization.oops, text));
                   }
                 },

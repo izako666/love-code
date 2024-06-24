@@ -51,4 +51,14 @@ class Localization {
       'Here you can chat normally, or use fun commands to spice up the conversation.';
   static const onboarding_3 =
       'The options are endless, are you ready? Click on Go!';
+
+  static const forgotPassword = 'Forgot your password? click here to reset it.';
+  static const resetEmailSent = 'Your password reset email was sent.';
+
+  static const verifyEmail = 'Verify your email';
+  static const plsVerifyEmail = 'Please verify your email';
+  static const verify = 'Verify';
+  static const needToConfirmYou = 'We need to confirm that this is really you';
+  static const emailVerifySent = 'Email verification email sent.';
+  static const later = 'Later';
 }

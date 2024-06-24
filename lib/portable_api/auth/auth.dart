@@ -12,6 +12,7 @@ class Auth extends GetxController {
   final FirebaseAuth _instance = FirebaseAuth.instance;
   static Auth instance() => Get.find<Auth>();
   Rx<User?> user = Rx<User?>(null);
+  RxBool queueVerify = false.obs;
   late final GoogleSignIn googleSignIn;
   @override
   void onInit() {
@@ -31,6 +32,11 @@ class Auth extends GetxController {
         Get.toNamed(RouteConstants.authInit);
       }
     });
+  }
+
+  Future<void> reload() async {
+    await user.value!.reload();
+    user.value = _instance.currentUser;
   }
 
   Future<UserCredential?> signInWithEmail(String email, String password) async {
@@ -76,5 +82,17 @@ class Auth extends GetxController {
         return const Right('oops');
       }
     }
+  }
+
+  Future<void> sendResetPassword(String email) async {
+    await _instance.sendPasswordResetEmail(email: email);
+  }
+
+  void queueVerifyDialog() {
+    queueVerify.value = true;
+  }
+
+  Future<void> sendEmailVerification() async {
+    user.value!.sendEmailVerification();
   }
 }

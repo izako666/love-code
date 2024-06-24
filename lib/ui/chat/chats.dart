@@ -132,7 +132,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   onDeleteTap: () {
                                     showLcDialog(
                                         title: Localization.deleteMessage,
-                                        desc: 'Please confirm your decision.',
+                                        desc: Localization.confirmDecision,
                                         actions: [
                                           LcButton(
                                             width: 75.w,
