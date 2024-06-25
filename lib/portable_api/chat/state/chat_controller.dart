@@ -2,17 +2,21 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/navigation/routes.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
+import 'package:love_code/portable_api/http/http_handler.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
+import 'package:love_code/ui/helper/helper.dart';
 
 class ChatController extends GetxController {
   @override
   void onInit() {
     findChatRoom();
+    pushToken();
     super.onInit();
   }
 
@@ -109,5 +113,29 @@ class ChatController extends GetxController {
     await FirestoreHandler.instance().deleteChat(chatRoom.value!);
     chatRoom.value = null;
     Get.toNamed(RouteConstants.makeRoom);
+  }
+
+  void pushToken() async {
+    final notificationSettings =
+        await FirebaseMessaging.instance.requestPermission(provisional: true);
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken != null) {
+      FirestoreHandler.instance().pushToken(fcmToken);
+    }
+
+    FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) {
+      FirestoreHandler.instance().pushToken(fcmToken);
+    }).onError((err) {});
+  }
+
+  Future<void> pushNotification(
+      {required String message, required DateTime timeStamp}) async {
+    String recipId =
+        await FirestoreHandler.instance().getRecipientId(chatRoom.value!);
+    HttpHandler.post('/send_notification', {
+      'title': 'New Message',
+      'message': '$message   ${Helper.formatTime(timeStamp)}',
+      'user_id': recipId
+    });
   }
 }

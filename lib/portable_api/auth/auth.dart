@@ -7,6 +7,7 @@ import 'package:love_code/constants.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/navigation/routes.dart';
 import 'package:dartz/dartz.dart';
+import 'package:love_code/portable_api/networking/firestore_handler.dart';
 
 class Auth extends GetxController {
   final FirebaseAuth _instance = FirebaseAuth.instance;
@@ -54,7 +55,9 @@ class Auth extends GetxController {
       idToken: authentication.idToken,
       accessToken: authentication.accessToken,
     );
-    return await _instance.signInWithCredential(provider);
+    UserCredential user = await _instance.signInWithCredential(provider);
+    await FirestoreHandler.instance().createUserDoc(user.user!.uid);
+    return user;
   }
 
   Future<void> signOut() async {
@@ -70,6 +73,7 @@ class Auth extends GetxController {
     try {
       var user = await _instance.createUserWithEmailAndPassword(
           email: email, password: password);
+      await FirestoreHandler.instance().createUserDoc(user.user!.uid);
       return Left(user);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {

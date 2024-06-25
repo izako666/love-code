@@ -175,4 +175,24 @@ class FirestoreHandler extends GetxController {
   Future<void> deleteChat(String chatRoom) async {
     await db.collection(Constants.fireStoreRooms).doc(chatRoom).delete();
   }
+
+  void pushToken(String fcmToken) async {
+    await db
+        .collection(Constants.fireStoreUsers)
+        .doc(Auth.instance().user.value!.uid)
+        .update({'push_token': fcmToken});
+  }
+
+  Future<String> getRecipientId(String chatId) async {
+    dynamic data =
+        (await db.collection(Constants.fireStoreRooms).doc(chatId).get())
+            .data();
+    return data['user_id'] == Auth.instance().user.value!.uid
+        ? data['other_user_id']
+        : data['user_id'];
+  }
+
+  Future<void> createUserDoc(String uid) async {
+    await db.collection(Constants.fireStoreUsers).doc(uid).set({});
+  }
 }

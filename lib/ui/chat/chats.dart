@@ -237,6 +237,8 @@ class _ChatScreenState extends State<ChatScreen> {
       replyToRef: replyMessage,
       timeStamp: DateTime.now(),
     ).sendMessage(ChatController.instance().chatRoom.value!);
+    ChatController.instance()
+        .pushNotification(message: _controller.text, timeStamp: DateTime.now());
     _controller.clear();
     replyMessage = null;
     editMessage = null;
