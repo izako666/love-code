@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:love_code/api/command.dart';
 
 import 'package:love_code/localization.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
 import 'package:love_code/portable_api/chat/state/chat_controller.dart';
 import 'package:love_code/portable_api/chat/widgets/message_widget.dart';
+import 'package:love_code/portable_api/local_data/local_data.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
 import 'package:love_code/resources.dart';
 import 'package:love_code/ui/chat/widgets/menu_drawer.dart';
+import 'package:love_code/ui/helper/scrollable_text.dart';
 import 'package:love_code/ui/helper/ui_helper.dart';
 
 import 'package:love_code/ui/theme.dart';
@@ -31,11 +35,25 @@ class _ChatScreenState extends State<ChatScreen> {
   late final ChatController chatController;
   Message? replyMessage;
   Message? editMessage;
+  bool showCommandInfo = true;
+  Command? mostLikelyCommand;
+  List<Command> availableCommands = Command.commands;
   final GlobalKey<ScaffoldState> _key = GlobalKey();
   @override
   void initState() {
     _controller = TextEditingController();
+    _controller.addListener(() {
+      if (_controller.text.startsWith('/')) {
+        mostLikelyCommand =
+            findMostSimilarCommand(_controller.text.substring(1));
+        availableCommands =
+            filterCommands(Command.commands, _controller.text.substring(1));
+      }
+      setState(() {});
+    });
     chatController = Get.find<ChatController>();
+    showCommandInfo =
+        LocalDataHandler.readData<bool>('show_command_info', true);
     super.initState();
   }
 
@@ -162,7 +180,8 @@ class _ChatScreenState extends State<ChatScreen> {
                                 ),
                               ));
                         }),
-                    if (replyMessage != null || editMessage != null) ...[
+                    if ((replyMessage != null || editMessage != null) &&
+                        !_controller.text.startsWith('/')) ...[
                       Positioned(
                           bottom: 0,
                           left: 0,
@@ -187,7 +206,90 @@ class _ChatScreenState extends State<ChatScreen> {
                               setState(() {});
                             },
                           ))
-                    ]
+                    ],
+                    if (_controller.text.startsWith('/')) ...[
+                      Positioned(
+                          bottom: 0,
+                          left: 0,
+                          child: Container(
+                              constraints: BoxConstraints(
+                                  maxHeight: 120,
+                                  minHeight: 60,
+                                  maxWidth: MediaQuery.sizeOf(context).width,
+                                  minWidth: MediaQuery.sizeOf(context).width),
+                              color: backgroundColor,
+                              child: ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  shrinkWrap: true,
+                                  itemCount: availableCommands.length,
+                                  itemBuilder: (ctx, i) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        _controller.text =
+                                            '/${availableCommands[i].id}';
+                                      },
+                                      child: Container(
+                                          width:
+                                              MediaQuery.sizeOf(context).width,
+                                          height: 60,
+                                          decoration: const BoxDecoration(
+                                              border: Border(
+                                                  bottom: BorderSide(
+                                                      color: primaryColor,
+                                                      width: 2))),
+                                          child: Row(
+                                            children: [
+                                              const SizedBox(width: 4),
+                                              Text(availableCommands[i].name,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium),
+                                              const Spacer(),
+                                              Text(availableCommands[i].id,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall),
+                                              const SizedBox(width: 16)
+                                            ],
+                                          )),
+                                    );
+                                  })))
+                    ],
+                    if (_controller.text.startsWith('/')) ...[
+                      Positioned(
+                          top: 8,
+                          left: 4,
+                          child: IconButton(
+                              onPressed: () {
+                                showCommandInfo = !showCommandInfo;
+                                LocalDataHandler.addData(
+                                    'show_command_info', showCommandInfo);
+                                setState(() {});
+                              },
+                              icon: Stack(children: [
+                                const Icon(Icons.info),
+                                !showCommandInfo
+                                    ? const Icon(
+                                        Icons.close,
+                                        color: primaryColor,
+                                      )
+                                    : Container()
+                              ]))),
+                      if (showCommandInfo && mostLikelyCommand != null) ...[
+                        Positioned(
+                          top: 20,
+                          left: 42,
+                          child: SizedBox(
+                            width: MediaQuery.sizeOf(context).width - 150,
+                            child: ScrollableText(
+                              text:
+                                  '${mostLikelyCommand!.name}:${mostLikelyCommand!.desc}',
+                              style: Theme.of(context).textTheme.bodyMedium!,
+                            ),
+                          ),
+                        )
+                      ]
+                    ],
                   ],
                 ),
               ),
@@ -203,7 +305,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   color: AppTheme.theme.colorScheme.primary,
                 ),
                 onPressed: () {
-                  if (editMessage != null) {
+                  if (editMessage != null &&
+                      !_controller.text.startsWith('/')) {
                     _handleEdit(editMessage!);
                   } else {
                     _handleMessageSend();
@@ -221,6 +324,23 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  Command? findMostSimilarCommand(String query) {
+    for (var command in Command.commands) {
+      if (command.id.startsWith(query)) {
+        return command;
+      }
+    }
+    return null;
+  }
+
+  List<Command> filterCommands(List<Command> commands, String input) {
+    if (input.isEmpty) {
+      return commands;
+    } else {
+      return commands.where((command) => command.id.startsWith(input)).toList();
+    }
+  }
+
   void _handleEdit(Message editMsg) {
     FirestoreHandler.instance().editMessage(
         ChatController.instance().chatRoom.value!, editMsg, _controller.text);
@@ -230,7 +350,20 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {});
   }
 
-  void _handleMessageSend() {
+  void _handleMessageSend() async {
+    if (_controller.text.startsWith('/')) {
+      String possibleCommand = _controller.text.split('/')[0].split(' ')[0];
+      Command? chosenCommand;
+      for (int i = 0; i < Command.commands.length; i++) {
+        if (possibleCommand == Command.commands[i].id) {
+          chosenCommand = Command.commands[i];
+          break;
+        }
+      }
+      if (chosenCommand != null) {
+        await chosenCommand.onDeploy(context);
+      }
+    }
     Message(
       message: _controller.text,
       senderId: Auth.instance().user.value!.uid,
