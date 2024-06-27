@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -138,4 +139,15 @@ class ChatController extends GetxController {
       'user_id': recipId
     });
   }
+
+  Future<void> sendAudioFile(
+    String fileName,
+    File file,
+    Message message,
+  ) async {
+    FirestoreHandler.instance().sendAudioMessage(
+        fileName, file, chatRoom.value!, message, message.waves!);
+  }
 }
+
+enum MESSAGETYPES { text, audio }

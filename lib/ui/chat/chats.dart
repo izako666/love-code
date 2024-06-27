@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -6,9 +8,13 @@ import 'package:get/get.dart';
 import 'package:love_code/api/command.dart';
 
 import 'package:love_code/localization.dart';
+import 'package:love_code/portable_api/audio/audio_controller.dart';
+import 'package:love_code/portable_api/audio/ui/recording_waveform.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
 import 'package:love_code/portable_api/chat/state/chat_controller.dart';
+import 'package:love_code/portable_api/chat/state/chat_controller.dart';
+import 'package:love_code/portable_api/chat/widgets/audio_message_widget.dart';
 import 'package:love_code/portable_api/chat/widgets/message_widget.dart';
 import 'package:love_code/portable_api/local_data/local_data.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
@@ -54,6 +60,8 @@ class _ChatScreenState extends State<ChatScreen> {
     chatController = Get.find<ChatController>();
     showCommandInfo =
         LocalDataHandler.readData<bool>('show_command_info', true);
+
+    Get.put<AudioController>(AudioController());
     super.initState();
   }
 
@@ -294,25 +302,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
             ),
-            TextField(
-              keyboardType: TextInputType.multiline,
-              maxLines: null,
+            InputArea(
               controller: _controller,
-              decoration: InputDecoration(
-                  suffixIcon: IconButton(
-                icon: Icon(
-                  editMessage != null ? Icons.check : Icons.send,
-                  color: AppTheme.theme.colorScheme.primary,
-                ),
-                onPressed: () {
-                  if (editMessage != null &&
-                      !_controller.text.startsWith('/')) {
-                    _handleEdit(editMessage!);
-                  } else {
-                    _handleMessageSend();
-                  }
-                },
-              )),
+              editMessage: editMessage,
+              handleEdit: _handleEdit,
+              handleMessageSend: _handleMessageSend,
             )
           ],
         ));
@@ -376,6 +370,126 @@ class _ChatScreenState extends State<ChatScreen> {
     replyMessage = null;
     editMessage = null;
     setState(() {});
+  }
+}
+
+class InputArea extends StatefulWidget {
+  const InputArea(
+      {super.key,
+      required this.controller,
+      required this.editMessage,
+      required this.handleEdit,
+      required this.handleMessageSend});
+  final TextEditingController controller;
+  final Message? editMessage;
+  final Function(Message) handleEdit;
+  final Function() handleMessageSend;
+
+  @override
+  State<InputArea> createState() => _InputAreaState();
+}
+
+class _InputAreaState extends State<InputArea> {
+  bool recording = false;
+  File? recordingFile;
+  bool recordingCanceled = false;
+  late AudioController audioController;
+  @override
+  void initState() {
+    super.initState();
+    audioController = Get.find<AudioController>();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        if (!recording) ...[
+          Expanded(
+            child: SizedBox(
+              width: 400,
+              child: TextField(
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
+                controller: widget.controller,
+              ),
+            ),
+          )
+        ],
+        if (recording) ...[
+          const Icon(Icons.delete),
+          RecordingWaveform(
+              stream:
+                  audioController.waveformData.stream.map((lDb) => lDb.last),
+              width: MediaQuery.sizeOf(context).width * 0.6,
+              height: 80,
+              color: recordingCanceled ? Colors.red : Colors.white,
+              thickness: 10)
+        ],
+        GestureDetector(
+            onLongPress: () async {
+              AudioController audioController = Get.find<AudioController>();
+              recordingFile = await audioController.startRecording();
+              recording = true;
+              setState(() {});
+            },
+            onLongPressEnd: (details) async {
+              if (recordingCanceled) {
+                recordingCanceled = false;
+                await audioController.endRecording();
+                await recordingFile?.delete();
+                recordingFile = null;
+                recording = false;
+                setState(() {});
+              } else {
+                String? filePath = await audioController.endRecording();
+                if (filePath != null) {
+                  String fileName = filePath.split('/').last.split('.').first;
+                  Message message = Message(
+                      message: '',
+                      senderId: Auth.instance().user.value!.uid,
+                      timeStamp: DateTime.now(),
+                      messageType: MESSAGETYPES.audio.name,
+                      downloadUrl: null,
+                      durationTime: AudioController.instance.durationTime!,
+                      file: null,
+                      waves: AudioController.instance.waveformData.toList());
+                  ChatController.instance()
+                      .sendAudioFile(fileName, recordingFile!, message);
+                  recording = false;
+                  setState(() {});
+                }
+              }
+            },
+            onLongPressMoveUpdate: (LongPressMoveUpdateDetails details) {
+              Offset offset = details.localOffsetFromOrigin;
+              if (offset.dy.abs() <= 30 &&
+                  offset.dx <= -100 &&
+                  !recordingCanceled) {
+                recordingCanceled = true;
+                setState(() {});
+              } else if (recordingCanceled) {
+                recordingCanceled = false;
+                setState(() {});
+              }
+            },
+            child: Icon(Icons.mic)),
+        IconButton(
+          icon: Icon(
+            widget.editMessage != null ? Icons.check : Icons.send,
+            color: AppTheme.theme.colorScheme.primary,
+          ),
+          onPressed: () {
+            if (widget.editMessage != null &&
+                !widget.controller.text.startsWith('/')) {
+              widget.handleEdit(widget.editMessage!);
+            } else {
+              widget.handleMessageSend();
+            }
+          },
+        ),
+      ],
+    );
   }
 }
 
@@ -463,14 +577,21 @@ class MessageWidgetPretty extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(
                 bottom: 16.0, top: 8.0, right: 8.0, left: 8.0),
-            child: MessageWidget(
-              msg: msg,
-              onReplyTap: onReplyTap,
-              onCopyTap: onCopyTap,
-              onEditTap: onEditTap,
-              onDeleteTap: onDeleteTap,
-              isReply: isReply,
-            ),
+            child: msg.messageType == MESSAGETYPES.audio.name
+                ? AudioMessageWidget(
+                    msg: msg,
+                    isReply: isReply,
+                    onReplyTap: onReplyTap,
+                    onDeleteTap: onDeleteTap,
+                  )
+                : MessageWidget(
+                    msg: msg,
+                    onReplyTap: onReplyTap,
+                    onCopyTap: onCopyTap,
+                    onEditTap: onEditTap,
+                    onDeleteTap: onDeleteTap,
+                    isReply: isReply,
+                  ),
           ),
         ),
       ],

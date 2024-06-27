@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:get/get.dart';
+import 'package:love_code/portable_api/networking/firestore_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
@@ -15,8 +16,14 @@ class AudioController extends GetxController {
   FlutterSoundRecorder recorder = FlutterSoundRecorder();
   Rx<Duration> playbackPosition = Duration().obs;
   Rx<Duration> playbackDuration = Duration().obs;
+  RxBool finishedPlaying = true.obs;
   RxList<double> waveformData = RxList<double>.empty(growable: true);
   StreamSubscription<Food>? _recorderSubscription;
+  StreamSubscription<PlaybackDisposition>? currentPlaySubscription;
+  StreamSubscription<RecordingDisposition>? currentRecordingStream;
+  Duration? durationTime;
+  File? currentFile;
+  static AudioController get instance => Get.find<AudioController>();
   @override
   void onInit() {
     initAudioPlugin();
@@ -32,12 +39,20 @@ class AudioController extends GetxController {
   Future<void> initAudioPlugin() async {
     await player.openPlayer();
     await recorder.openRecorder();
+    await player.setSubscriptionDuration(Duration(milliseconds: 50));
+    currentPlaySubscription = player.onProgress!.listen((e) {
+      playbackPosition.value = e.position;
+      playbackDuration.value = e.duration;
+      Get.log('playpos ${playbackPosition.value}');
+    });
     isInit.value = true;
   }
 
   Future<void> closeAudioPlugin() async {
     await player.closePlayer();
     await recorder.closeRecorder();
+    currentPlaySubscription!.cancel();
+    currentPlaySubscription = null;
     isInit.value = false;
   }
 
@@ -56,11 +71,13 @@ class AudioController extends GetxController {
   }
 
   Future<File?> startRecording() async {
+    waveformData.clear();
     PermissionStatus status = await Permission.microphone.request();
     var tempDir = await getTemporaryDirectory();
     if (status == PermissionStatus.denied) return null;
     String id = Uuid().v4();
     File outputFile = await createFile(id);
+    currentFile = outputFile;
     IOSink sink = returnSink(outputFile);
 
     var recordingDataController = StreamController<Food>();
@@ -70,31 +87,65 @@ class AudioController extends GetxController {
         sink.add(buffer.data!);
       }
     });
+    await recorder.setSubscriptionDuration(const Duration(milliseconds: 20));
     recorder.startRecorder(
         toStream: recordingDataController.sink,
         codec: Codec.pcm16,
         bufferSize: 20480);
+    currentRecordingStream = recorder.onProgress!.listen((data) {
+      durationTime = data.duration;
+      Get.log('duration is ${durationTime?.inMilliseconds}');
+    });
     return outputFile;
   }
 
   Future<String?> endRecording() async {
     await _recorderSubscription?.cancel();
-    waveformData.clear();
-    return await recorder.stopRecorder();
+    await recorder.stopRecorder();
+    await currentRecordingStream!.cancel();
+    currentRecordingStream = null;
+    String filePath = currentFile!.path;
+    currentFile = null;
+    return filePath;
   }
 
-  Future<void> playAudio() async {
-    playbackDuration.value = (await player.startPlayer()) ?? Duration();
-    player.onProgress!.listen((e) {
-      playbackPosition.value = e.position;
-      playbackDuration.value = e.duration;
-    });
+  Future<Duration> getAudioDuration(File file) async {
+    var length = await file.length();
+
+    int sampleRate = 16000; // Sample rate in Hz
+    int numChannels = 1; // Number of channels
+    int bitDepth = 16; // Bit depth in bits
+
+    int bytesPerSample = bitDepth ~/ 8;
+    int bytesPerSecond = sampleRate * numChannels * bytesPerSample;
+
+    int totalSeconds = length ~/ bytesPerSecond;
+
+    return Duration(seconds: totalSeconds);
+  }
+
+  Future<void> playAudio(String uri) async {
+    if (player.isPaused) {
+      player.resumePlayer();
+    } else {
+      finishedPlaying.value = false;
+      Uint8List? data =
+          await FirestoreHandler.instance().audioStorage.child(uri).getData();
+      (await player.startPlayer(
+          fromDataBuffer: data,
+          codec: Codec.pcm16,
+          whenFinished: () async {
+            finishedPlaying.value = true;
+          }));
+    }
+  }
+
+  Future<void> pauseAudio() async {
+    await player.pausePlayer();
   }
 
   Future<void> stopAudio() async {
     await player.stopPlayer();
-    playbackDuration.value = Duration();
-    playbackPosition.value = Duration();
   }
 
 // Function to convert Uint8List to a list of amplitudes
@@ -127,7 +178,7 @@ class AudioController extends GetxController {
   }
 
 // Function to process audio buffer and add decibel intensity to a list
-  void processAudioBuffer(Uint8List buffer, {minDb = -100, maxDb = 0}) {
+  void processAudioBuffer(Uint8List buffer, {minDb = -100.0, maxDb = 0.0}) {
     List<double> amplitudes = convertToAmplitudes(buffer);
     double rms = calculateRMS(amplitudes);
     double decibels = rmsToDecibels(rms);

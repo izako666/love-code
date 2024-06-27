@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
 import 'package:love_code/constants.dart';
+import 'package:love_code/portable_api/audio/audio_controller.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
 import 'package:love_code/portable_api/chat/state/chat_controller.dart';
@@ -202,8 +203,31 @@ class FirestoreHandler extends GetxController {
     await db.collection(Constants.fireStoreUsers).doc(uid).set({});
   }
 
-  Future<void> uploadAudioFile(String fileName, File file) async {
+  Future<String> uploadAudioFile(String fileName, File file) async {
     Reference fileRef = storage.ref('audio').child(fileName);
     await fileRef.putFile(file);
+    return fileName;
+  }
+
+  Future<void> sendAudioMessage(String fileName, File file, String chatId,
+      Message message, List<double> waves) async {
+    String url = await uploadAudioFile(fileName, file);
+    db
+        .collection(Constants.fireStoreRooms)
+        .doc(chatId)
+        .collection(Constants.msgBox)
+        .add({
+      'message': message.message,
+      'timestamp': Timestamp.fromDate(message.timeStamp),
+      'sender_id': message.senderId,
+      if (message.replyToRef != null) ...{
+        'reply_to_message': message.replyToRef!.message,
+        'reply_to_date': Timestamp.fromDate(message.replyToRef!.timeStamp)
+      },
+      'message_type': 'audio',
+      'file_url': url,
+      'wave_list': waves,
+      'duration_time': message.durationTime!.inMilliseconds
+    });
   }
 }

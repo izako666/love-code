@@ -49,6 +49,7 @@ class _RecordingWaveformState extends State<RecordingWaveform> {
               _controller.jumpTo(_controller.position.maxScrollExtent);
             }
             return SingleChildScrollView(
+              controller: _controller,
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: dbList

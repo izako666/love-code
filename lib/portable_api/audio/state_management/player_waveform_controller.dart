@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:love_code/portable_api/audio/audio_controller.dart';
 
 class PlayerWaveformController extends ChangeNotifier {
+  PlayerWaveformController({required this.url});
+  final String url;
   bool _playing = false;
   Duration _playPosition = Duration();
   Duration _maxDuration = Duration();
@@ -9,8 +13,20 @@ class PlayerWaveformController extends ChangeNotifier {
   Duration get playPosition => _playPosition;
   Duration get maxDuration => _maxDuration;
 
-  void setPlaying(bool val) {
+  void setPlaying(bool val) async {
     _playing = val;
+    if (_playing) {
+      AudioController.instance.playAudio(url);
+    } else {
+      AudioController.instance.pauseAudio();
+    }
+    notifyListeners();
+  }
+
+  void setFinishedPlaying() {
+    _playPosition = Duration();
+    _playing = false;
+    Get.log('setFinishedPlaying called');
     notifyListeners();
   }
 
@@ -25,13 +41,10 @@ class PlayerWaveformController extends ChangeNotifier {
   }
 
   void start() {
-    _playPosition = Duration();
-    _playing = true;
-    notifyListeners();
+    setPlaying(true);
   }
 
   void pause() {
-    _playing = false;
-    notifyListeners();
+    setPlaying(false);
   }
 }

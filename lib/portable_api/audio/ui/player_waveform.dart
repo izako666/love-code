@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
+import 'package:get/get.dart';
+import 'package:love_code/portable_api/audio/audio_controller.dart';
 import 'package:love_code/portable_api/audio/state_management/player_waveform_controller.dart';
 
 class PlayerWaveform extends StatefulWidget {
@@ -29,6 +31,7 @@ class PlayerWaveform extends StatefulWidget {
 class _PlayerWaveformState extends State<PlayerWaveform>
     with SingleTickerProviderStateMixin {
   late Ticker _ticker;
+  Duration oldDuration = Duration();
   @override
   void initState() {
     widget.controller.setMaxDuration(widget.maxDuration);
@@ -48,14 +51,22 @@ class _PlayerWaveformState extends State<PlayerWaveform>
     setState(() {});
   }
 
-  void _onTick(delta) {
+  void _onTick(Duration delta) {
     if (widget.controller.playing) {
-      Duration finalDuration =
-          widget.controller.playPosition + Duration(milliseconds: delta);
-      if (finalDuration.compareTo(widget.controller.maxDuration) >= 0) {
-        finalDuration = widget.controller.maxDuration;
+      Duration finalDuration = AudioController.instance.playbackPosition.value;
+
+      if (finalDuration
+              .compareTo(AudioController.instance.playbackDuration.value) >=
+          0) {
+        finalDuration = AudioController.instance.playbackDuration.value;
       }
       widget.controller.setPlayingPosition(finalDuration);
+
+      Get.log(
+          '${AudioController.instance.playbackPosition.value.inMilliseconds}');
+      if (AudioController.instance.finishedPlaying.value) {
+        widget.controller.setFinishedPlaying();
+      }
     }
   }
 
@@ -66,13 +77,30 @@ class _PlayerWaveformState extends State<PlayerWaveform>
       height: widget.height,
       color: Colors.transparent,
       child: ShaderMask(
+        blendMode: BlendMode.srcIn,
         shaderCallback: (rect) {
+          double finalStop =
+              widget.controller.playPosition.inMilliseconds.toDouble() /
+                  widget.controller.maxDuration.inMilliseconds.toDouble();
+          Get.log('final stoppu ${finalStop}');
           return LinearGradient(
-            colors: [widget.playedColor, widget.normalColor],
+            colors: [
+              widget.playedColor,
+              widget.playedColor,
+              widget.playedColor,
+              widget.playedColor,
+              widget.playedColor,
+              widget.playedColor,
+              widget.normalColor
+            ],
             stops: [
-              widget.controller.playPosition.inMilliseconds /
-                  widget.controller.maxDuration.inMilliseconds,
-              1
+              0,
+              finalStop,
+              finalStop,
+              finalStop,
+              finalStop,
+              finalStop,
+              finalStop,
             ],
           ).createShader(rect);
         },
