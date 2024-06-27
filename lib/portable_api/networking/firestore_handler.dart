@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
 import 'package:love_code/constants.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
@@ -7,10 +10,13 @@ import 'package:love_code/portable_api/chat/state/chat_controller.dart';
 
 class FirestoreHandler extends GetxController {
   final FirebaseFirestore db = FirebaseFirestore.instance;
+  final FirebaseStorage storage = FirebaseStorage.instance;
+  late final Reference audioStorage;
   static FirestoreHandler instance() => Get.find<FirestoreHandler>();
   @override
   void onInit() {
     super.onInit();
+    audioStorage = storage.ref('audio');
     db.settings = const Settings(persistenceEnabled: true);
   }
 
@@ -194,5 +200,10 @@ class FirestoreHandler extends GetxController {
 
   Future<void> createUserDoc(String uid) async {
     await db.collection(Constants.fireStoreUsers).doc(uid).set({});
+  }
+
+  Future<void> uploadAudioFile(String fileName, File file) async {
+    Reference fileRef = storage.ref('audio').child(fileName);
+    await fileRef.putFile(file);
   }
 }
