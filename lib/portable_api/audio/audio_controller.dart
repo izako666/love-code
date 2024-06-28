@@ -22,6 +22,7 @@ class AudioController extends GetxController {
   StreamSubscription<PlaybackDisposition>? currentPlaySubscription;
   StreamSubscription<RecordingDisposition>? currentRecordingStream;
   Duration? durationTime;
+  Rx<String> currentUrl = ''.obs;
   File? currentFile;
   static AudioController get instance => Get.find<AudioController>();
   @override
@@ -39,11 +40,17 @@ class AudioController extends GetxController {
   Future<void> initAudioPlugin() async {
     await player.openPlayer();
     await recorder.openRecorder();
-    await player.setSubscriptionDuration(Duration(milliseconds: 50));
+    await player.setSubscriptionDuration(Duration(milliseconds: 10));
     currentPlaySubscription = player.onProgress!.listen((e) {
       playbackPosition.value = e.position;
       playbackDuration.value = e.duration;
       Get.log('playpos ${playbackPosition.value}');
+    });
+
+    await recorder.setSubscriptionDuration(const Duration(milliseconds: 20));
+    currentRecordingStream = recorder.onProgress!.listen((data) {
+      durationTime = data.duration;
+      Get.log('duration is ${durationTime?.inMilliseconds}');
     });
     isInit.value = true;
   }
@@ -53,6 +60,8 @@ class AudioController extends GetxController {
     await recorder.closeRecorder();
     currentPlaySubscription!.cancel();
     currentPlaySubscription = null;
+    currentRecordingStream!.cancel();
+    currentRecordingStream = null;
     isInit.value = false;
   }
 
@@ -87,23 +96,18 @@ class AudioController extends GetxController {
         sink.add(buffer.data!);
       }
     });
-    await recorder.setSubscriptionDuration(const Duration(milliseconds: 20));
+
     recorder.startRecorder(
         toStream: recordingDataController.sink,
         codec: Codec.pcm16,
         bufferSize: 20480);
-    currentRecordingStream = recorder.onProgress!.listen((data) {
-      durationTime = data.duration;
-      Get.log('duration is ${durationTime?.inMilliseconds}');
-    });
+
     return outputFile;
   }
 
   Future<String?> endRecording() async {
     await _recorderSubscription?.cancel();
     await recorder.stopRecorder();
-    await currentRecordingStream!.cancel();
-    currentRecordingStream = null;
     String filePath = currentFile!.path;
     currentFile = null;
     return filePath;
@@ -125,19 +129,31 @@ class AudioController extends GetxController {
   }
 
   Future<void> playAudio(String uri) async {
-    if (player.isPaused) {
+    if (player.isPaused && currentUrl == uri) {
       player.resumePlayer();
     } else {
+      if (player.isPaused) {
+        await player.stopPlayer();
+      }
+      currentUrl.value = uri;
       finishedPlaying.value = false;
       Uint8List? data =
           await FirestoreHandler.instance().audioStorage.child(uri).getData();
-      (await player.startPlayer(
+      Get.log("start called");
+      await player.startPlayer(
           fromDataBuffer: data,
           codec: Codec.pcm16,
-          whenFinished: () async {
+          whenFinished: () {
             finishedPlaying.value = true;
-          }));
+          });
+      Get.log("start awaited");
+
+      await player.seekToPlayer(Duration.zero);
     }
+  }
+
+  Future<void> setPlayerPosition(Duration duration) async {
+    await player.seekToPlayer(duration);
   }
 
   Future<void> pauseAudio() async {
@@ -168,7 +184,7 @@ class AudioController extends GetxController {
 
 // Function to convert RMS value to decibels
   double rmsToDecibels(double rms) {
-    if (rms == 0) return -100.0;
+    if (rms == 0) return -40.0;
     return 20 * log(rms) / ln10; // Convert to decibels (dB)
   }
 
@@ -178,10 +194,11 @@ class AudioController extends GetxController {
   }
 
 // Function to process audio buffer and add decibel intensity to a list
-  void processAudioBuffer(Uint8List buffer, {minDb = -100.0, maxDb = 0.0}) {
+  void processAudioBuffer(Uint8List buffer, {minDb = -40.0, maxDb = 0.0}) {
     List<double> amplitudes = convertToAmplitudes(buffer);
     double rms = calculateRMS(amplitudes);
     double decibels = rmsToDecibels(rms);
+    Get.log('decibel $decibels');
     double normalizedValue = normalizeDecibels(decibels, minDb, maxDb);
     waveformData.add(normalizedValue);
   }

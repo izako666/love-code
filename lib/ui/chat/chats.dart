@@ -417,14 +417,17 @@ class _InputAreaState extends State<InputArea> {
           )
         ],
         if (recording) ...[
-          const Icon(Icons.delete),
-          RecordingWaveform(
-              stream:
-                  audioController.waveformData.stream.map((lDb) => lDb.last),
-              width: MediaQuery.sizeOf(context).width * 0.6,
-              height: 80,
-              color: recordingCanceled ? Colors.red : Colors.white,
-              thickness: 10)
+          Icon(Icons.delete,
+              color: recordingCanceled ? Colors.red : Colors.white),
+          Expanded(
+            child: RecordingWaveform(
+                stream:
+                    audioController.waveformData.stream.map((lDb) => lDb.last),
+                width: MediaQuery.sizeOf(context).width * 0.6,
+                height: 80,
+                color: recordingCanceled ? Colors.red : Colors.white,
+                thickness: 10),
+          )
         ],
         GestureDetector(
             onLongPress: () async {
@@ -468,7 +471,8 @@ class _InputAreaState extends State<InputArea> {
                   !recordingCanceled) {
                 recordingCanceled = true;
                 setState(() {});
-              } else if (recordingCanceled) {
+              } else if (recordingCanceled &&
+                  (offset.dy.abs() > 30 || offset.dx > -100)) {
                 recordingCanceled = false;
                 setState(() {});
               }

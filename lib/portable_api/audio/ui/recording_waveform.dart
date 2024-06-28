@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -51,14 +53,21 @@ class _RecordingWaveformState extends State<RecordingWaveform> {
             return SingleChildScrollView(
               controller: _controller,
               scrollDirection: Axis.horizontal,
-              child: Row(
-                children: dbList
-                    .map((d) => Container(
-                          height: widget.height * d,
-                          width: widget.thickness,
-                          color: Colors.white,
-                        ))
-                    .toList(),
+              child: ShaderMask(
+                shaderCallback: (rect) {
+                  return LinearGradient(
+                      colors: [widget.color, widget.color],
+                      stops: const [0.0, 1.0]).createShader(rect);
+                },
+                child: Row(
+                  children: dbList
+                      .map((d) => Container(
+                            height: widget.height * pow(d, 5),
+                            width: widget.thickness,
+                            color: widget.color,
+                          ))
+                      .toList(),
+                ),
               ),
             );
           }),

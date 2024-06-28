@@ -14,12 +14,12 @@ class PlayerWaveformController extends ChangeNotifier {
   Duration get maxDuration => _maxDuration;
 
   void setPlaying(bool val) async {
-    _playing = val;
-    if (_playing) {
-      AudioController.instance.playAudio(url);
+    if (val) {
+      await AudioController.instance.playAudio(url);
     } else {
-      AudioController.instance.pauseAudio();
+      await AudioController.instance.pauseAudio();
     }
+    _playing = val;
     notifyListeners();
   }
 
@@ -30,7 +30,14 @@ class PlayerWaveformController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setPlayingPosition(Duration pos) {
+  Future<void> setPlayingPosition(Duration pos) async {
+    _playPosition = pos;
+    notifyListeners();
+  }
+
+  Future<void> setPlayingPositionAudio(Duration pos) async {
+    await AudioController.instance.setPlayerPosition(pos);
+
     _playPosition = pos;
     notifyListeners();
   }
