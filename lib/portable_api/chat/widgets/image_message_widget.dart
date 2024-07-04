@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
@@ -6,21 +7,17 @@ import 'package:love_code/ui/helper/ui_helper.dart';
 import 'package:love_code/ui/theme.dart';
 import 'package:popover/popover.dart';
 
-class MessageWidget extends StatelessWidget {
+class ImageMessageWidget extends StatelessWidget {
   final Message msg;
   final bool isReply;
   final Function()? onReplyTap;
-  final Function()? onCopyTap;
-  final Function()? onEditTap;
   final Function()? onDeleteTap;
 
-  const MessageWidget(
+  const ImageMessageWidget(
       {super.key,
       required this.msg,
       this.isReply = false,
       this.onReplyTap,
-      this.onCopyTap,
-      this.onEditTap,
       this.onDeleteTap});
 
   @override
@@ -56,27 +53,6 @@ class MessageWidget extends StatelessWidget {
                           if (msg.senderId ==
                               Auth.instance().user.value!.uid) ...[
                             ListTile(
-                              title: const Text(Localization.edit),
-                              trailing: const Icon(Icons.edit),
-                              onTap: () {
-                                if (onEditTap != null) onEditTap!();
-
-                                Navigator.pop(ctx);
-                              },
-                            )
-                          ],
-                          ListTile(
-                            title: const Text(Localization.copy),
-                            trailing: const Icon(Icons.copy),
-                            onTap: () {
-                              if (onCopyTap != null) onCopyTap!();
-
-                              Navigator.pop(ctx);
-                            },
-                          ),
-                          if (msg.senderId ==
-                              Auth.instance().user.value!.uid) ...[
-                            ListTile(
                               title: const Text(Localization.delete),
                               trailing: const Icon(Icons.delete),
                               onTap: () {
@@ -98,12 +74,58 @@ class MessageWidget extends StatelessWidget {
         child: Row(children: [
           SizedBox(
             width: isReply ? screenWidth - 100 : screenWidth * 0.3,
-            child: Text(
-              msg.messageType.contains('/')
-                  ? msg.message.split(' ')[1]
-                  : msg.message,
-              softWrap: !isReply,
-              overflow: isReply ? TextOverflow.ellipsis : null,
+            child: GestureDetector(
+              onTap: () async {
+                Get.dialog(Dialog(
+                  backgroundColor: Colors.transparent,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: screenWidth * 0.7,
+                        height: screenWidth * 0.7,
+                        child: Image.network(
+                          msg.downloadUrl!,
+                          width: screenWidth * 0.5,
+                          height: screenWidth * 0.5,
+                          errorBuilder: (a, b, c) => SizedBox(
+                              width: screenWidth * 0.3,
+                              height: screenWidth * 0.3,
+                              child: CircularProgressIndicator()),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                          width: screenWidth * 0.7,
+                          height: 60,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                primaryColor,
+                                backgroundColor,
+                                backgroundColor,
+                                backgroundColor,
+                                primaryColor
+                              ],
+                              stops: [0.1, 0.2, 0.5, 0.8, 0.9],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                          child: Center(child: Text(msg.message)))
+                    ],
+                  ),
+                ));
+              },
+              child: Image.network(
+                msg.downloadUrl!,
+                width: screenWidth * 0.3,
+                height: screenWidth * 0.3,
+                errorBuilder: (a, b, c) => SizedBox(
+                    width: screenWidth * 0.3,
+                    height: screenWidth * 0.3,
+                    child: CircularProgressIndicator()),
+              ),
             ),
           ),
           Text("${msg.timeStamp.hour}:${msg.timeStamp.minute}"),

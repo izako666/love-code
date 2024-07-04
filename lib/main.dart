@@ -1,12 +1,16 @@
+import 'dart:typed_data';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:love_code/firebase_options.dart';
 import 'package:love_code/navigation/routes.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
+import 'package:love_code/resources.dart';
 import 'package:love_code/state_management/splash_controller.dart';
 
 import 'package:love_code/ui/entrance/splash_screen.dart';
@@ -20,7 +24,45 @@ void main() async {
   Get.put<Auth>(Auth());
   Get.put<FirestoreHandler>(FirestoreHandler());
   Get.put<SplashController>(SplashController());
+  await initializeNotifications();
+  await createNotificationChannels();
   runApp(const MyApp());
+}
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+Future<void> initializeNotifications() async {
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('app_icon');
+
+  final InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+}
+
+Future<void> createNotificationChannels() async {
+  Int64List vibrations = Int64List(6);
+  vibrations[0] = 0;
+  vibrations[1] = 200;
+  vibrations[2] = 100;
+  vibrations[3] = 50;
+  vibrations[4] = 25;
+  vibrations[5] = 10;
+  AndroidNotificationChannel alertChannel = AndroidNotificationChannel(
+      'alert_channel', // channel ID
+      'Alert Notifications', // channel name
+      description: 'Incoming alert notifications',
+      vibrationPattern: vibrations,
+      importance: Importance.high,
+      audioAttributesUsage: AudioAttributesUsage.notificationEvent);
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(alertChannel);
 }
 
 class MyApp extends StatefulWidget {

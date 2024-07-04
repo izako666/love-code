@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/navigation/routes.dart';
@@ -12,6 +13,7 @@ import 'package:love_code/portable_api/chat/models/message.dart';
 import 'package:love_code/portable_api/http/http_handler.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
 import 'package:love_code/ui/helper/helper.dart';
+import 'package:love_code/ui/theme.dart';
 
 class ChatController extends GetxController {
   @override
@@ -119,6 +121,9 @@ class ChatController extends GetxController {
   void pushToken() async {
     final notificationSettings =
         await FirebaseMessaging.instance.requestPermission(provisional: true);
+    RemoteMessage? msg = await FirebaseMessaging.instance.getInitialMessage();
+    _handleNotifOpened(msg);
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleNotifOpened);
     final fcmToken = await FirebaseMessaging.instance.getToken();
     if (fcmToken != null) {
       FirestoreHandler.instance().pushToken(fcmToken);
@@ -129,14 +134,119 @@ class ChatController extends GetxController {
     }).onError((err) {});
   }
 
+  void _handleNotifOpened(RemoteMessage? msg) {
+    if (msg != null && msg.data['messagetype'] == 'text/draw') {
+      String? msgId = msg.data['message_id'];
+      if (msgId != null) {
+        Message? msg = messages
+            .where((msg) => msg.messageId == msgId && msg.messageId != null)
+            .firstOrNull;
+        if (msg != null) {
+          double screenWidth = MediaQueryData.fromView(
+                  WidgetsBinding.instance.renderViews.first.flutterView)
+              .size
+              .width;
+
+          Get.dialog(Dialog(
+            backgroundColor: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: screenWidth * 0.7,
+                  height: screenWidth * 0.7,
+                  child: Image.network(
+                    msg.downloadUrl!,
+                    width: screenWidth * 0.5,
+                    height: screenWidth * 0.5,
+                    errorBuilder: (a, b, c) => SizedBox(
+                        width: screenWidth * 0.3,
+                        height: screenWidth * 0.3,
+                        child: CircularProgressIndicator()),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                    width: screenWidth * 0.7,
+                    height: 60,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          primaryColor,
+                          backgroundColor,
+                          backgroundColor,
+                          backgroundColor,
+                          primaryColor
+                        ],
+                        stops: [0.1, 0.2, 0.5, 0.8, 0.9],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                    child: Center(child: Text(msg.message)))
+              ],
+            ),
+          ));
+        }
+      }
+    }
+  }
+
   Future<void> pushNotification(
-      {required String message, required DateTime timeStamp}) async {
+      {required String message,
+      required String messageId,
+      required DateTime timeStamp}) async {
     String recipId =
         await FirestoreHandler.instance().getRecipientId(chatRoom.value!);
     HttpHandler.post('/send_notification', {
       'title': 'New Message',
       'message': '$message   ${Helper.formatTime(timeStamp)}',
-      'user_id': recipId
+      'user_id': recipId,
+      'message_id': messageId
+    });
+  }
+
+  Future<void> pushVoiceNotification(
+      {required String message,
+      required String messageId,
+      required DateTime timeStamp}) async {
+    String recipId =
+        await FirestoreHandler.instance().getRecipientId(chatRoom.value!);
+    HttpHandler.post('/send_notification', {
+      'title': 'New Message',
+      'message':
+          '${Auth.instance().user.value!.displayName} sent you a voice message.   ${Helper.formatTime(timeStamp)}',
+      'user_id': recipId,
+      'message_id': messageId
+    });
+  }
+
+  Future<void> pushAlertNotification(
+      {required String message,
+      required String messageId,
+      required DateTime timeStamp}) async {
+    String recipId =
+        await FirestoreHandler.instance().getRecipientId(chatRoom.value!);
+    HttpHandler.post('/send_notification_alert', {
+      'title': 'Alert!',
+      'message': '$message   ${Helper.formatTime(timeStamp)}',
+      'user_id': recipId,
+      'message_id': messageId
+    });
+  }
+
+  Future<void> pushDrawNotification(
+      {required String message,
+      required String messageId,
+      required DateTime timeStamp}) async {
+    String recipId =
+        await FirestoreHandler.instance().getRecipientId(chatRoom.value!);
+    HttpHandler.post('/send_notification_draw', {
+      'title': 'Check this out!',
+      'message':
+          '${Auth.instance().user.value!.displayName!} sent you a drawing!  ${Helper.formatTime(timeStamp)}',
+      'user_id': recipId,
+      'message_id': messageId
     });
   }
 
@@ -150,4 +260,19 @@ class ChatController extends GetxController {
   }
 }
 
-enum MESSAGETYPES { text, audio }
+enum MESSAGETYPES { text, audio, draw }
+
+extension IdExtension on MESSAGETYPES {
+  String get id {
+    switch (this) {
+      case MESSAGETYPES.text:
+        return 'text';
+      case MESSAGETYPES.audio:
+        return 'audio';
+      case MESSAGETYPES.draw:
+        return 'text/draw';
+      default:
+        return 'text';
+    }
+  }
+}

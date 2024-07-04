@@ -33,7 +33,9 @@ class Message {
   }
 
   Message.fromData(Map<String, dynamic> data, String id)
-      : message = data['message'],
+      : message = data['message_type'] == 'text/draw'
+            ? (data['message'] as String).substring(6)
+            : data['message'],
         messageType = data['message_type'] ?? 'text',
         downloadUrl = data['file_url'],
         waves = data['wave_list'] != null

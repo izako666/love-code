@@ -1,4 +1,5 @@
 import 'package:get/get_navigation/src/routes/get_route.dart';
+import 'package:love_code/portable_api/drawing/drawing_screen.dart';
 import 'package:love_code/ui/chat/chats.dart';
 import 'package:love_code/ui/chat/home_loading.dart';
 import 'package:love_code/ui/chat/make_room.dart';
@@ -27,7 +28,14 @@ class AppRoutes {
               ]),
         ]),
     GetPage(name: RouteConstants.home, page: () => const HomeLoadingScreen()),
-    GetPage(name: RouteConstants.chats, page: () => const ChatScreen()),
+    GetPage(
+        name: RouteConstants.chats,
+        page: () => const ChatScreen(),
+        children: [
+          GetPage<bool>(
+              name: RouteConstants.drawingScreen,
+              page: () => const DrawingScreen())
+        ]),
     GetPage(name: RouteConstants.makeRoom, page: () => const MakeRoomScreen())
   ];
 }
@@ -41,4 +49,5 @@ class RouteConstants {
   static const signIn = '/sign_in';
   static const signUpEmail = '/sign_up_email';
   static const onBoarding = '/on_boarding';
+  static const drawingScreen = '/drawing_screen';
 }

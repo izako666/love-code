@@ -61,4 +61,6 @@ class Localization {
   static const needToConfirmYou = 'We need to confirm that this is really you';
   static const emailVerifySent = 'Email verification email sent.';
   static const later = 'Later';
+
+  static const send = 'Send';
 }

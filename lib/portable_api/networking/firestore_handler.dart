@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -75,7 +76,7 @@ class FirestoreHandler extends GetxController {
         .doc(chatId)
         .collection(Constants.msgBox)
         .orderBy('timestamp')
-        .snapshots()
+        .snapshots(includeMetadataChanges: true)
         .listen((d) {
       ChatController.instance().messages.clear();
       ChatController.instance().messages.value = docsToMessages(d);
@@ -207,6 +208,38 @@ class FirestoreHandler extends GetxController {
     Reference fileRef = storage.ref('audio').child(fileName);
     await fileRef.putFile(file);
     return fileName;
+  }
+
+  Future<String> uploadImageFile(String fileName, Uint8List file) async {
+    Reference fileRef = storage.ref('image').child(fileName);
+    await fileRef.putData(file);
+    return await fileRef.getDownloadURL();
+  }
+
+  Future<String?> sendDrawMessage(
+      Uint8List file, String chatId, Message message) async {
+    DocumentReference doc = await db
+        .collection(Constants.fireStoreRooms)
+        .doc(chatId)
+        .collection(Constants.msgBox)
+        .add({
+      'message': message.message,
+      'timestamp': Timestamp.fromDate(message.timeStamp),
+      'sender_id': message.senderId,
+      if (message.replyToRef != null) ...{
+        'reply_to_message': message.replyToRef!.message,
+        'reply_to_date': Timestamp.fromDate(message.replyToRef!.timeStamp)
+      },
+      'message_type': 'text/draw',
+      'file_url': '',
+    });
+
+    String url = await uploadImageFile(doc.id, file);
+
+    await doc.update(
+      {'file_url': url},
+    );
+    return doc.id;
   }
 
   Future<void> sendAudioMessage(String fileName, File file, String chatId,

@@ -7,37 +7,46 @@ Future<T?> showLcDialog<T>(
     {String? title,
     String? desc,
     Widget? body,
+    double? width,
+    double? height,
     List<Widget> actions = const [],
-    double radius = 16}) {
-  return Get.generalDialog<T>(
-      pageBuilder: (c, a, b) => LcDialog(
-            title: title,
-            desc: desc,
-            body: body,
-            actions: actions,
-            radius: radius,
-          ));
+    double radius = 16,
+    bool barrierDismissible = false}) {
+  return Get.dialog<T?>(
+      barrierDismissible: barrierDismissible,
+      LcDialog(
+          title: title,
+          desc: desc,
+          body: body,
+          actions: actions,
+          radius: radius,
+          width: width,
+          height: height));
 }
 
 class LcDialog extends StatelessWidget {
-  const LcDialog(
+  LcDialog(
       {super.key,
       this.title,
       this.desc,
       this.body,
       this.actions = const [],
-      this.radius = 16});
+      this.radius = 16,
+      this.width,
+      this.height});
   final String? title;
   final String? desc;
   final Widget? body;
   final List<Widget> actions;
   final double radius;
+  final double? width;
+  final double? height;
   @override
   Widget build(BuildContext context) {
     return Dialog(
       child: Container(
-        width: 0.6.sw,
-        height: 0.5.sh,
+        width: width ?? 0.6.sw,
+        height: height ?? 0.5.sh,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(radius),
             gradient: const LinearGradient(

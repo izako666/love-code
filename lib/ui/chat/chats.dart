@@ -15,6 +15,7 @@ import 'package:love_code/portable_api/chat/models/message.dart';
 import 'package:love_code/portable_api/chat/state/chat_controller.dart';
 import 'package:love_code/portable_api/chat/state/chat_controller.dart';
 import 'package:love_code/portable_api/chat/widgets/audio_message_widget.dart';
+import 'package:love_code/portable_api/chat/widgets/image_message_widget.dart';
 import 'package:love_code/portable_api/chat/widgets/message_widget.dart';
 import 'package:love_code/portable_api/local_data/local_data.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
@@ -44,10 +45,12 @@ class _ChatScreenState extends State<ChatScreen> {
   bool showCommandInfo = true;
   Command? mostLikelyCommand;
   List<Command> availableCommands = Command.commands;
+  late final FocusNode textNode;
   final GlobalKey<ScaffoldState> _key = GlobalKey();
   @override
   void initState() {
     _controller = TextEditingController();
+    textNode = FocusNode();
     _controller.addListener(() {
       if (_controller.text.startsWith('/')) {
         mostLikelyCommand =
@@ -234,7 +237,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                     return GestureDetector(
                                       onTap: () {
                                         _controller.text =
-                                            '/${availableCommands[i].id}';
+                                            '/${availableCommands[i].id} ';
                                       },
                                       child: Container(
                                           width:
@@ -304,6 +307,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             InputArea(
               controller: _controller,
+              node: textNode,
               editMessage: editMessage,
               handleEdit: _handleEdit,
               handleMessageSend: _handleMessageSend,
@@ -315,12 +319,14 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    textNode.dispose();
     super.dispose();
   }
 
   Command? findMostSimilarCommand(String query) {
+    String finalQuery = query.trim();
     for (var command in Command.commands) {
-      if (command.id.startsWith(query)) {
+      if (command.id.startsWith(finalQuery)) {
         return command;
       }
     }
@@ -328,10 +334,13 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   List<Command> filterCommands(List<Command> commands, String input) {
-    if (input.isEmpty) {
+    String finalInput = input.trim();
+    if (finalInput.isEmpty) {
       return commands;
     } else {
-      return commands.where((command) => command.id.startsWith(input)).toList();
+      return commands
+          .where((command) => command.id.startsWith(finalInput))
+          .toList();
     }
   }
 
@@ -345,9 +354,10 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _handleMessageSend() async {
+    Command? chosenCommand;
+    String? messageId;
     if (_controller.text.startsWith('/')) {
-      String possibleCommand = _controller.text.split('/')[0].split(' ')[0];
-      Command? chosenCommand;
+      String possibleCommand = _controller.text.split('/')[1].split(' ')[0];
       for (int i = 0; i < Command.commands.length; i++) {
         if (possibleCommand == Command.commands[i].id) {
           chosenCommand = Command.commands[i];
@@ -355,17 +365,31 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
       if (chosenCommand != null) {
-        await chosenCommand.onDeploy(context);
+        textNode.unfocus();
+        messageId = await chosenCommand.onDeploy(context, _controller);
       }
     }
-    Message(
-      message: _controller.text,
-      senderId: Auth.instance().user.value!.uid,
-      replyToRef: replyMessage,
-      timeStamp: DateTime.now(),
-    ).sendMessage(ChatController.instance().chatRoom.value!);
-    ChatController.instance()
-        .pushNotification(message: _controller.text, timeStamp: DateTime.now());
+    if (chosenCommand == null || !chosenCommand.overrideMessageSend()) {
+      messageId = (await Message(
+                  message: _controller.text,
+                  senderId: Auth.instance().user.value!.uid,
+                  replyToRef: replyMessage,
+                  timeStamp: DateTime.now(),
+                  messageType: chosenCommand != null
+                      ? chosenCommand.commandType
+                      : 'text')
+              .sendMessage(ChatController.instance().chatRoom.value!))
+          ?.id;
+    }
+
+    if (chosenCommand != null) {
+      chosenCommand.pushNotif(_controller.text, messageId);
+    } else {
+      ChatController.instance().pushNotification(
+          message: _controller.text,
+          messageId: messageId ?? '',
+          timeStamp: DateTime.now());
+    }
     _controller.clear();
     replyMessage = null;
     editMessage = null;
@@ -379,11 +403,13 @@ class InputArea extends StatefulWidget {
       required this.controller,
       required this.editMessage,
       required this.handleEdit,
-      required this.handleMessageSend});
+      required this.handleMessageSend,
+      required this.node});
   final TextEditingController controller;
   final Message? editMessage;
   final Function(Message) handleEdit;
   final Function() handleMessageSend;
+  final FocusNode node;
 
   @override
   State<InputArea> createState() => _InputAreaState();
@@ -412,6 +438,7 @@ class _InputAreaState extends State<InputArea> {
                 keyboardType: TextInputType.multiline,
                 maxLines: null,
                 controller: widget.controller,
+                focusNode: widget.node,
               ),
             ),
           )
@@ -448,10 +475,11 @@ class _InputAreaState extends State<InputArea> {
                 String? filePath = await audioController.endRecording();
                 if (filePath != null) {
                   String fileName = filePath.split('/').last.split('.').first;
+                  DateTime timeStamp = DateTime.now();
                   Message message = Message(
                       message: '',
                       senderId: Auth.instance().user.value!.uid,
-                      timeStamp: DateTime.now(),
+                      timeStamp: timeStamp,
                       messageType: MESSAGETYPES.audio.name,
                       downloadUrl: null,
                       durationTime: AudioController.instance.durationTime!,
@@ -460,6 +488,8 @@ class _InputAreaState extends State<InputArea> {
                   ChatController.instance()
                       .sendAudioFile(fileName, recordingFile!, message);
                   recording = false;
+                  ChatController.instance().pushVoiceNotification(
+                      message: '', messageId: '', timeStamp: timeStamp);
                   setState(() {});
                 }
               }
@@ -560,10 +590,14 @@ class MessageWidgetPretty extends StatelessWidget {
                     colors: right
                         ? [
                             Colors.transparent,
-                            Theme.of(context).colorScheme.primary
+                            msg.messageType.contains('/')
+                                ? Colors.blue
+                                : Theme.of(context).colorScheme.primary
                           ]
                         : [
-                            Theme.of(context).colorScheme.primary,
+                            msg.messageType.contains('/')
+                                ? Colors.blue
+                                : Theme.of(context).colorScheme.primary,
                             Colors.transparent
                           ],
                     stops: right ? const [0.95, 1] : const [0, 0.05])
@@ -581,24 +615,47 @@ class MessageWidgetPretty extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(
                 bottom: 16.0, top: 8.0, right: 8.0, left: 8.0),
-            child: msg.messageType == MESSAGETYPES.audio.name
-                ? AudioMessageWidget(
-                    msg: msg,
-                    isReply: isReply,
-                    onReplyTap: onReplyTap,
-                    onDeleteTap: onDeleteTap,
-                  )
-                : MessageWidget(
-                    msg: msg,
-                    onReplyTap: onReplyTap,
-                    onCopyTap: onCopyTap,
-                    onEditTap: onEditTap,
-                    onDeleteTap: onDeleteTap,
-                    isReply: isReply,
-                  ),
+            child: getMessageWidget(),
           ),
         ),
       ],
     );
+  }
+
+  Widget getMessageWidget() {
+    switch (msg.messageType) {
+      case 'text':
+        return MessageWidget(
+          msg: msg,
+          onReplyTap: onReplyTap,
+          onCopyTap: onCopyTap,
+          onEditTap: onEditTap,
+          onDeleteTap: onDeleteTap,
+          isReply: isReply,
+        );
+      case 'audio':
+        return AudioMessageWidget(
+          msg: msg,
+          isReply: isReply,
+          onReplyTap: onReplyTap,
+          onDeleteTap: onDeleteTap,
+        );
+      case 'text/draw':
+        return ImageMessageWidget(
+          msg: msg,
+          onReplyTap: onReplyTap,
+          onDeleteTap: onDeleteTap,
+          isReply: isReply,
+        );
+      default:
+        return MessageWidget(
+          msg: msg,
+          onReplyTap: onReplyTap,
+          onCopyTap: onCopyTap,
+          onEditTap: onEditTap,
+          onDeleteTap: onDeleteTap,
+          isReply: isReply,
+        );
+    }
   }
 }
