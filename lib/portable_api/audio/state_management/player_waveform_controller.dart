@@ -6,8 +6,8 @@ class PlayerWaveformController extends ChangeNotifier {
   PlayerWaveformController({required this.url});
   final String url;
   bool _playing = false;
-  Duration _playPosition = Duration();
-  Duration _maxDuration = Duration();
+  Duration _playPosition = const Duration();
+  Duration _maxDuration = const Duration();
 
   bool get playing => _playing;
   Duration get playPosition => _playPosition;
@@ -24,7 +24,7 @@ class PlayerWaveformController extends ChangeNotifier {
   }
 
   void setFinishedPlaying() {
-    _playPosition = Duration();
+    _playPosition = const Duration();
     _playing = false;
     Get.log('setFinishedPlaying called');
     notifyListeners();

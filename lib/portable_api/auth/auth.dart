@@ -1,18 +1,22 @@
 import 'dart:async';
+import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:love_code/constants.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/navigation/routes.dart';
-import 'package:dartz/dartz.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
 
 class Auth extends GetxController {
   final FirebaseAuth _instance = FirebaseAuth.instance;
   static Auth instance() => Get.find<Auth>();
   Rx<User?> user = Rx<User?>(null);
+  Rx<DocumentSnapshot<Map<String, dynamic>>?> userData =
+      Rx<DocumentSnapshot<Map<String, dynamic>>?>(null);
   RxBool queueVerify = false.obs;
   late final GoogleSignIn googleSignIn;
   @override
@@ -21,6 +25,22 @@ class Auth extends GetxController {
     googleSignIn = GoogleSignIn(scopes: Constants.googleScopes);
     _instance.authStateChanges().listen((u) {
       user.value = u;
+    });
+  }
+
+  void exposeUserData() {
+    FirestoreHandler.instance()
+        .db
+        .collection(Constants.fireStoreUsers)
+        .doc(user.value!.uid)
+        .snapshots(includeMetadataChanges: true)
+        .listen((d) {
+      userData.value = d;
+      Get.log('user Data updated');
+    }, onError: (a, b) {
+      Get.log('user stream errored $b');
+    }, onDone: () {
+      Get.log('user stream finished');
     });
   }
 
@@ -56,8 +76,25 @@ class Auth extends GetxController {
       accessToken: authentication.accessToken,
     );
     UserCredential user = await _instance.signInWithCredential(provider);
-    await FirestoreHandler.instance().createUserDoc(user.user!.uid);
+    await FirestoreHandler.instance().createUserDoc(
+        user.user!.uid, user.additionalUserInfo?.username ?? "No Name");
     return user;
+  }
+
+  Future<void> setName(String newUserName) async {
+    await FirestoreHandler.instance()
+        .db
+        .collection(Constants.fireStoreUsers)
+        .doc(user.value!.uid)
+        .update({'userName': newUserName});
+  }
+
+  Stream<DocumentSnapshot<Map<String, dynamic>>> userStream() {
+    return FirestoreHandler.instance()
+        .db
+        .collection(Constants.fireStoreUsers)
+        .doc(user.value!.uid)
+        .snapshots(includeMetadataChanges: true);
   }
 
   Future<void> signOut() async {
@@ -73,7 +110,7 @@ class Auth extends GetxController {
     try {
       var user = await _instance.createUserWithEmailAndPassword(
           email: email, password: password);
-      await FirestoreHandler.instance().createUserDoc(user.user!.uid);
+      await FirestoreHandler.instance().createUserDoc(user.user!.uid, userName);
       return Left(user);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
@@ -98,5 +135,25 @@ class Auth extends GetxController {
 
   Future<void> sendEmailVerification() async {
     user.value!.sendEmailVerification();
+  }
+
+  Future<String> getProfilePicture() async {
+    return await FirestoreHandler.instance().getProfilePicture();
+  }
+
+  Future<void> setProfilePicture(Uint8List image) async {
+    await FirestoreHandler.instance().setProfilePicture(image);
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>> getUserDoc() async {
+    return await FirestoreHandler.instance()
+        .db
+        .collection(Constants.fireStoreUsers)
+        .doc(user.value!.uid)
+        .get();
+  }
+
+  Future<void> setMood(String emoji, String moodText) async {
+    await FirestoreHandler.instance().setUserMood(emoji, moodText);
   }
 }

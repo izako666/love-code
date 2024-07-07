@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_drawing_board/flutter_drawing_board.dart';
 import 'package:love_code/ui/util/lc_dialog.dart';
-import 'package:popover/popover.dart';
 
 class IzDrawingBoard extends StatefulWidget {
   const IzDrawingBoard(

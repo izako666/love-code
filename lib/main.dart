@@ -10,16 +10,15 @@ import 'package:love_code/firebase_options.dart';
 import 'package:love_code/navigation/routes.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
-import 'package:love_code/resources.dart';
 import 'package:love_code/state_management/splash_controller.dart';
-
 import 'package:love_code/ui/entrance/splash_screen.dart';
 import 'package:love_code/ui/theme.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
+  PhotoManager.clearFileCache();
   //Get Controller Init
   Get.put<Auth>(Auth());
   Get.put<FirestoreHandler>(FirestoreHandler());
@@ -36,7 +35,7 @@ Future<void> initializeNotifications() async {
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('app_icon');
 
-  final InitializationSettings initializationSettings = InitializationSettings(
+  const InitializationSettings initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
   );
 

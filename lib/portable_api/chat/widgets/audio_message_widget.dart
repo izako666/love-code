@@ -90,8 +90,9 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> {
                               title: const Text(Localization.reply),
                               trailing: const Icon(Icons.reply),
                               onTap: () {
-                                if (widget.onReplyTap != null)
+                                if (widget.onReplyTap != null) {
                                   widget.onReplyTap!();
+                                }
                                 Navigator.pop(ctx);
                               },
                             ),
@@ -102,8 +103,9 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> {
                                 trailing: const Icon(Icons.delete),
                                 onTap: () {
                                   Navigator.pop(ctx);
-                                  if (widget.onDeleteTap != null)
+                                  if (widget.onDeleteTap != null) {
                                     widget.onDeleteTap!();
+                                  }
                                 },
                               )
                             ],

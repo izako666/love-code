@@ -11,21 +11,24 @@ Future<T?> showLcDialog<T>(
     double? height,
     List<Widget> actions = const [],
     double radius = 16,
-    bool barrierDismissible = false}) {
+    bool barrierDismissible = false,
+    Alignment alignment = Alignment.center}) {
   return Get.dialog<T?>(
       barrierDismissible: barrierDismissible,
       LcDialog(
-          title: title,
-          desc: desc,
-          body: body,
-          actions: actions,
-          radius: radius,
-          width: width,
-          height: height));
+        title: title,
+        desc: desc,
+        body: body,
+        actions: actions,
+        radius: radius,
+        width: width,
+        height: height,
+        alignment: alignment,
+      ));
 }
 
 class LcDialog extends StatelessWidget {
-  LcDialog(
+  const LcDialog(
       {super.key,
       this.title,
       this.desc,
@@ -33,7 +36,8 @@ class LcDialog extends StatelessWidget {
       this.actions = const [],
       this.radius = 16,
       this.width,
-      this.height});
+      this.height,
+      this.alignment = Alignment.center});
   final String? title;
   final String? desc;
   final Widget? body;
@@ -41,19 +45,18 @@ class LcDialog extends StatelessWidget {
   final double radius;
   final double? width;
   final double? height;
+  final Alignment alignment;
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      alignment: alignment,
       child: Container(
         width: width ?? 0.6.sw,
         height: height ?? 0.5.sh,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(radius),
             gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [backgroundColor, primaryColor],
-                stops: [0.9, 1])),
+                begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [backgroundColor, primaryColor], stops: [0.9, 1])),
         child: Column(
           children: [
             const SizedBox(height: 32),

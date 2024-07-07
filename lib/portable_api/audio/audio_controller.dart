@@ -14,8 +14,8 @@ class AudioController extends GetxController {
   RxBool isInit = false.obs;
   FlutterSoundPlayer player = FlutterSoundPlayer();
   FlutterSoundRecorder recorder = FlutterSoundRecorder();
-  Rx<Duration> playbackPosition = Duration().obs;
-  Rx<Duration> playbackDuration = Duration().obs;
+  Rx<Duration> playbackPosition = const Duration().obs;
+  Rx<Duration> playbackDuration = const Duration().obs;
   RxBool finishedPlaying = true.obs;
   RxList<double> waveformData = RxList<double>.empty(growable: true);
   StreamSubscription<Food>? _recorderSubscription;
@@ -40,7 +40,7 @@ class AudioController extends GetxController {
   Future<void> initAudioPlugin() async {
     await player.openPlayer();
     await recorder.openRecorder();
-    await player.setSubscriptionDuration(Duration(milliseconds: 10));
+    await player.setSubscriptionDuration(const Duration(milliseconds: 10));
     currentPlaySubscription = player.onProgress!.listen((e) {
       playbackPosition.value = e.position;
       playbackDuration.value = e.duration;
@@ -84,7 +84,7 @@ class AudioController extends GetxController {
     PermissionStatus status = await Permission.microphone.request();
     var tempDir = await getTemporaryDirectory();
     if (status == PermissionStatus.denied) return null;
-    String id = Uuid().v4();
+    String id = const Uuid().v4();
     File outputFile = await createFile(id);
     currentFile = outputFile;
     IOSink sink = returnSink(outputFile);

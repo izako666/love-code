@@ -1,9 +1,7 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:love_code/portable_api/audio/audio_controller.dart';
 import 'package:love_code/portable_api/audio/state_management/player_waveform_controller.dart';
@@ -33,7 +31,7 @@ class PlayerWaveform extends StatefulWidget {
 class _PlayerWaveformState extends State<PlayerWaveform>
     with SingleTickerProviderStateMixin {
   late Ticker _ticker;
-  Duration oldDuration = Duration();
+  Duration oldDuration = const Duration();
   @override
   void initState() {
     widget.controller.setMaxDuration(widget.maxDuration);
@@ -109,7 +107,7 @@ class _PlayerWaveformState extends State<PlayerWaveform>
                     widget.controller.url) {
                   finalStop = 0;
                 }
-                Get.log('final stoppu ${finalStop}');
+                Get.log('final stoppu $finalStop');
                 return LinearGradient(
                   colors: [
                     widget.playedColor,

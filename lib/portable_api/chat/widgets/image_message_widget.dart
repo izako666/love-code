@@ -91,7 +91,7 @@ class ImageMessageWidget extends StatelessWidget {
                           errorBuilder: (a, b, c) => SizedBox(
                               width: screenWidth * 0.3,
                               height: screenWidth * 0.3,
-                              child: CircularProgressIndicator()),
+                              child: const CircularProgressIndicator()),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -124,7 +124,7 @@ class ImageMessageWidget extends StatelessWidget {
                 errorBuilder: (a, b, c) => SizedBox(
                     width: screenWidth * 0.3,
                     height: screenWidth * 0.3,
-                    child: CircularProgressIndicator()),
+                    child: const CircularProgressIndicator()),
               ),
             ),
           ),

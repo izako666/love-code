@@ -53,7 +53,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
             ],
           )),
       body: SingleChildScrollView(
-        physics: AlwaysScrollableScrollPhysics(),
+        physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           children: [
             const SizedBox(height: kToolbarHeight),

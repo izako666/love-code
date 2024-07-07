@@ -1,29 +1,24 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:love_code/api/command.dart';
-
 import 'package:love_code/localization.dart';
 import 'package:love_code/portable_api/audio/audio_controller.dart';
 import 'package:love_code/portable_api/audio/ui/recording_waveform.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
 import 'package:love_code/portable_api/chat/state/chat_controller.dart';
-import 'package:love_code/portable_api/chat/state/chat_controller.dart';
 import 'package:love_code/portable_api/chat/widgets/audio_message_widget.dart';
 import 'package:love_code/portable_api/chat/widgets/image_message_widget.dart';
 import 'package:love_code/portable_api/chat/widgets/message_widget.dart';
 import 'package:love_code/portable_api/local_data/local_data.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
-import 'package:love_code/resources.dart';
 import 'package:love_code/ui/chat/widgets/menu_drawer.dart';
 import 'package:love_code/ui/helper/scrollable_text.dart';
 import 'package:love_code/ui/helper/ui_helper.dart';
-
 import 'package:love_code/ui/theme.dart';
 import 'package:love_code/ui/util/lc_app_bar.dart';
 import 'package:love_code/ui/util/lc_button.dart';
@@ -85,27 +80,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 _key.currentState!.openDrawer();
               },
             ),
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  Resources.heartLogo,
-                  width: 40,
-                  height: 40,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(
-                  width: 10,
-                ),
-                Text(Localization.appTitle,
-                    style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                        wordSpacing: 1.2,
-                        color: Theme.of(context).colorScheme.primary)),
-                const SizedBox(
-                  width: 50,
-                ),
-              ],
-            )),
+            title: const Text('Lasagna')),
         body: Column(
           children: [
             Expanded(
@@ -507,7 +482,7 @@ class _InputAreaState extends State<InputArea> {
                 setState(() {});
               }
             },
-            child: Icon(Icons.mic)),
+            child: const Icon(Icons.mic)),
         IconButton(
           icon: Icon(
             widget.editMessage != null ? Icons.check : Icons.send,

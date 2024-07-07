@@ -1,20 +1,14 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_drawing_board/flutter_drawing_board.dart';
 import 'package:get/get.dart';
 import 'package:love_code/api/command.dart';
-import 'package:love_code/constants.dart';
-import 'package:love_code/localization.dart';
 import 'package:love_code/navigation/routes.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
 import 'package:love_code/portable_api/chat/state/chat_controller.dart';
-import 'package:love_code/portable_api/drawing/drawing_board.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
-import 'package:love_code/ui/util/lc_button.dart';
-import 'package:love_code/ui/util/lc_dialog.dart';
 
 class DrawCommand extends Command {
   DrawCommand(
@@ -50,6 +44,7 @@ class DrawCommand extends Command {
             dataList, ChatController.instance().chatRoom.value!, message);
       }
     }
+    return null;
   }
 
   @override

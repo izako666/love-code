@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
 import 'package:love_code/constants.dart';
-import 'package:love_code/portable_api/audio/audio_controller.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
 import 'package:love_code/portable_api/chat/state/chat_controller.dart';
@@ -200,8 +199,11 @@ class FirestoreHandler extends GetxController {
         : data['user_id'];
   }
 
-  Future<void> createUserDoc(String uid) async {
-    await db.collection(Constants.fireStoreUsers).doc(uid).set({});
+  Future<void> createUserDoc(String uid, String userName) async {
+    await db
+        .collection(Constants.fireStoreUsers)
+        .doc(uid)
+        .set({'userName': userName});
   }
 
   Future<String> uploadAudioFile(String fileName, File file) async {
@@ -262,5 +264,35 @@ class FirestoreHandler extends GetxController {
       'wave_list': waves,
       'duration_time': message.durationTime!.inMilliseconds
     });
+  }
+
+  Future<String> getProfilePicture() async {
+    DocumentSnapshot<Map<String, dynamic>> snap = await db
+        .collection(Constants.fireStoreUsers)
+        .doc(Auth.instance().user.value!.uid)
+        .get();
+    return snap.data()!['profile_url'] ?? '';
+  }
+
+  Future<void> setProfilePicture(Uint8List file) async {
+    await storage
+        .ref('profiles')
+        .child(Auth.instance().user.value!.uid)
+        .putData(file);
+    String downloadUrl = await storage
+        .ref('profiles')
+        .child(Auth.instance().user.value!.uid)
+        .getDownloadURL();
+    await db
+        .collection(Constants.fireStoreUsers)
+        .doc(Auth.instance().user.value!.uid)
+        .update({'profile_url': downloadUrl});
+  }
+
+  Future<void> setUserMood(String emoji, String moodText) async {
+    await db
+        .collection(Constants.fireStoreUsers)
+        .doc(Auth.instance().user.value!.uid)
+        .update({'mood_emoji': emoji, 'mood_message': moodText});
   }
 }
