@@ -48,16 +48,13 @@ class _ChatScreenState extends State<ChatScreen> {
     textNode = FocusNode();
     _controller.addListener(() {
       if (_controller.text.startsWith('/')) {
-        mostLikelyCommand =
-            findMostSimilarCommand(_controller.text.substring(1));
-        availableCommands =
-            filterCommands(Command.commands, _controller.text.substring(1));
+        mostLikelyCommand = findMostSimilarCommand(_controller.text.substring(1));
+        availableCommands = filterCommands(Command.commands, _controller.text.substring(1));
       }
       setState(() {});
     });
     chatController = Get.find<ChatController>();
-    showCommandInfo =
-        LocalDataHandler.readData<bool>('show_command_info', true);
+    showCommandInfo = LocalDataHandler.readData<bool>('show_command_info', true);
 
     Get.put<AudioController>(AudioController());
     super.initState();
@@ -80,9 +77,22 @@ class _ChatScreenState extends State<ChatScreen> {
                 _key.currentState!.openDrawer();
               },
             ),
-            title: const Text('Lasagna')),
+            title: Row(children: [
+              ProfilePictureWidget(userId: ChatController.instance().recipientId.value, width: 30.w, height: 30.w),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(ChatController.instance().recipientData.value?.data()?['userName'] ?? '',
+                      style: Theme.of(context).textTheme.bodyMedium),
+                  Text(ChatController.instance().recipientData.value?.data()?['mood_message'] ?? '',
+                      style: Theme.of(context).textTheme.bodySmall),
+                ],
+              )
+            ])),
         body: Column(
           children: [
+            const SizedBox(height: 32),
             Expanded(
               child: Obx(
                 () => Stack(
@@ -92,21 +102,13 @@ class _ChatScreenState extends State<ChatScreen> {
                         reverse: true,
                         shrinkWrap: true,
                         itemBuilder: (context, index) {
-                          Message msg = chatController.messages[
-                              chatController.messages.length - (index + 1)];
+                          Message msg = chatController.messages[chatController.messages.length - (index + 1)];
                           return Align(
-                              alignment: msg.senderId != currentId
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
+                              alignment: msg.senderId != currentId ? Alignment.centerRight : Alignment.centerLeft,
                               child: Dismissible(
                                 key: GlobalKey(),
-                                direction: msg.senderId != currentId
-                                    ? DismissDirection.endToStart
-                                    : DismissDirection.startToEnd,
-                                dismissThresholds: const {
-                                  DismissDirection.endToStart: 0.2,
-                                  DismissDirection.startToEnd: 0.2
-                                },
+                                direction: msg.senderId != currentId ? DismissDirection.endToStart : DismissDirection.startToEnd,
+                                dismissThresholds: const {DismissDirection.endToStart: 0.2, DismissDirection.startToEnd: 0.2},
                                 confirmDismiss: (d) async {
                                   replyMessage = msg;
                                   editMessage = null;
@@ -123,51 +125,40 @@ class _ChatScreenState extends State<ChatScreen> {
                                     setState(() {});
                                   },
                                   onCopyTap: () async {
-                                    await Clipboard.setData(
-                                        ClipboardData(text: msg.message));
+                                    await Clipboard.setData(ClipboardData(text: msg.message));
                                   },
                                   onEditTap: () {
-                                    _controller.value =
-                                        TextEditingValue(text: msg.message);
+                                    _controller.value = TextEditingValue(text: msg.message);
                                     editMessage = msg;
                                     replyMessage = null;
                                     setState(() {});
                                   },
                                   onDeleteTap: () {
-                                    showLcDialog(
-                                        title: Localization.deleteMessage,
-                                        desc: Localization.confirmDecision,
-                                        actions: [
-                                          LcButton(
-                                            width: 75.w,
-                                            height: 35.w,
-                                            text: Localization.delete,
-                                            onPressed: () {
-                                              FirestoreHandler.instance()
-                                                  .deleteMessage(
-                                                      ChatController.instance()
-                                                          .chatRoom
-                                                          .value!,
-                                                      msg);
-                                              Navigator.pop(context);
-                                            },
-                                          ),
-                                          const SizedBox(width: 16),
-                                          LcButton(
-                                            width: 75.w,
-                                            height: 35.w,
-                                            text: Localization.cancel,
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                            },
-                                          )
-                                        ]);
+                                    showLcDialog(title: Localization.deleteMessage, desc: Localization.confirmDecision, actions: [
+                                      LcButton(
+                                        width: 75.w,
+                                        height: 35.w,
+                                        text: Localization.delete,
+                                        onPressed: () {
+                                          FirestoreHandler.instance().deleteMessage(ChatController.instance().chatRoom.value!, msg);
+                                          Navigator.pop(context);
+                                        },
+                                      ),
+                                      const SizedBox(width: 16),
+                                      LcButton(
+                                        width: 75.w,
+                                        height: 35.w,
+                                        text: Localization.cancel,
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                      )
+                                    ]);
                                   },
                                 ),
                               ));
                         }),
-                    if ((replyMessage != null || editMessage != null) &&
-                        !_controller.text.startsWith('/')) ...[
+                    if ((replyMessage != null || editMessage != null) && !_controller.text.startsWith('/')) ...[
                       Positioned(
                           bottom: 0,
                           left: 0,
@@ -211,30 +202,19 @@ class _ChatScreenState extends State<ChatScreen> {
                                   itemBuilder: (ctx, i) {
                                     return GestureDetector(
                                       onTap: () {
-                                        _controller.text =
-                                            '/${availableCommands[i].id} ';
+                                        _controller.text = '/${availableCommands[i].id} ';
                                       },
                                       child: Container(
-                                          width:
-                                              MediaQuery.sizeOf(context).width,
+                                          width: MediaQuery.sizeOf(context).width,
                                           height: 60,
-                                          decoration: const BoxDecoration(
-                                              border: Border(
-                                                  bottom: BorderSide(
-                                                      color: primaryColor,
-                                                      width: 2))),
+                                          decoration:
+                                              const BoxDecoration(border: Border(bottom: BorderSide(color: primaryColor, width: 2))),
                                           child: Row(
                                             children: [
                                               const SizedBox(width: 4),
-                                              Text(availableCommands[i].name,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium),
+                                              Text(availableCommands[i].name, style: Theme.of(context).textTheme.bodyMedium),
                                               const Spacer(),
-                                              Text(availableCommands[i].id,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall),
+                                              Text(availableCommands[i].id, style: Theme.of(context).textTheme.bodySmall),
                                               const SizedBox(width: 16)
                                             ],
                                           )),
@@ -248,8 +228,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           child: IconButton(
                               onPressed: () {
                                 showCommandInfo = !showCommandInfo;
-                                LocalDataHandler.addData(
-                                    'show_command_info', showCommandInfo);
+                                LocalDataHandler.addData('show_command_info', showCommandInfo);
                                 setState(() {});
                               },
                               icon: Stack(children: [
@@ -268,8 +247,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           child: SizedBox(
                             width: MediaQuery.sizeOf(context).width - 150,
                             child: ScrollableText(
-                              text:
-                                  '${mostLikelyCommand!.name}:${mostLikelyCommand!.desc}',
+                              text: '${mostLikelyCommand!.name}:${mostLikelyCommand!.desc}',
                               style: Theme.of(context).textTheme.bodyMedium!,
                             ),
                           ),
@@ -313,15 +291,12 @@ class _ChatScreenState extends State<ChatScreen> {
     if (finalInput.isEmpty) {
       return commands;
     } else {
-      return commands
-          .where((command) => command.id.startsWith(finalInput))
-          .toList();
+      return commands.where((command) => command.id.startsWith(finalInput)).toList();
     }
   }
 
   void _handleEdit(Message editMsg) {
-    FirestoreHandler.instance().editMessage(
-        ChatController.instance().chatRoom.value!, editMsg, _controller.text);
+    FirestoreHandler.instance().editMessage(ChatController.instance().chatRoom.value!, editMsg, _controller.text);
     replyMessage = null;
     editMessage = null;
     _controller.clear();
@@ -350,9 +325,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   senderId: Auth.instance().user.value!.uid,
                   replyToRef: replyMessage,
                   timeStamp: DateTime.now(),
-                  messageType: chosenCommand != null
-                      ? chosenCommand.commandType
-                      : 'text')
+                  messageType: chosenCommand != null ? chosenCommand.commandType : 'text')
               .sendMessage(ChatController.instance().chatRoom.value!))
           ?.id;
     }
@@ -360,10 +333,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (chosenCommand != null) {
       chosenCommand.pushNotif(_controller.text, messageId);
     } else {
-      ChatController.instance().pushNotification(
-          message: _controller.text,
-          messageId: messageId ?? '',
-          timeStamp: DateTime.now());
+      ChatController.instance().pushNotification(message: _controller.text, messageId: messageId ?? '', timeStamp: DateTime.now());
     }
     _controller.clear();
     replyMessage = null;
@@ -419,12 +389,10 @@ class _InputAreaState extends State<InputArea> {
           )
         ],
         if (recording) ...[
-          Icon(Icons.delete,
-              color: recordingCanceled ? Colors.red : Colors.white),
+          Icon(Icons.delete, color: recordingCanceled ? Colors.red : Colors.white),
           Expanded(
             child: RecordingWaveform(
-                stream:
-                    audioController.waveformData.stream.map((lDb) => lDb.last),
+                stream: audioController.waveformData.stream.map((lDb) => lDb.last),
                 width: MediaQuery.sizeOf(context).width * 0.6,
                 height: 80,
                 color: recordingCanceled ? Colors.red : Colors.white,
@@ -460,24 +428,19 @@ class _InputAreaState extends State<InputArea> {
                       durationTime: AudioController.instance.durationTime!,
                       file: null,
                       waves: AudioController.instance.waveformData.toList());
-                  ChatController.instance()
-                      .sendAudioFile(fileName, recordingFile!, message);
+                  ChatController.instance().sendAudioFile(fileName, recordingFile!, message);
                   recording = false;
-                  ChatController.instance().pushVoiceNotification(
-                      message: '', messageId: '', timeStamp: timeStamp);
+                  ChatController.instance().pushVoiceNotification(message: '', messageId: '', timeStamp: timeStamp);
                   setState(() {});
                 }
               }
             },
             onLongPressMoveUpdate: (LongPressMoveUpdateDetails details) {
               Offset offset = details.localOffsetFromOrigin;
-              if (offset.dy.abs() <= 30 &&
-                  offset.dx <= -100 &&
-                  !recordingCanceled) {
+              if (offset.dy.abs() <= 30 && offset.dx <= -100 && !recordingCanceled) {
                 recordingCanceled = true;
                 setState(() {});
-              } else if (recordingCanceled &&
-                  (offset.dy.abs() > 30 || offset.dx > -100)) {
+              } else if (recordingCanceled && (offset.dy.abs() > 30 || offset.dx > -100)) {
                 recordingCanceled = false;
                 setState(() {});
               }
@@ -489,8 +452,7 @@ class _InputAreaState extends State<InputArea> {
             color: AppTheme.theme.colorScheme.primary,
           ),
           onPressed: () {
-            if (widget.editMessage != null &&
-                !widget.controller.text.startsWith('/')) {
+            if (widget.editMessage != null && !widget.controller.text.startsWith('/')) {
               widget.handleEdit(widget.editMessage!);
             } else {
               widget.handleMessageSend();
@@ -532,21 +494,12 @@ class MessageWidgetPretty extends StatelessWidget {
         if (msg.replyToRef != null && !isReply) ...[
           Container(
             decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .darken(0.5)
-                    .withAlpha(125),
+                color: Theme.of(context).colorScheme.primary.darken(0.5).withAlpha(125),
                 borderRadius: right
-                    ? const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        bottomLeft: Radius.circular(16))
-                    : const BorderRadius.only(
-                        topRight: Radius.circular(16),
-                        bottomRight: Radius.circular(16))),
+                    ? const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16))
+                    : const BorderRadius.only(topRight: Radius.circular(16), bottomRight: Radius.circular(16))),
             child: Padding(
-              padding: const EdgeInsets.only(
-                  bottom: 16.0, top: 8.0, right: 8.0, left: 8.0),
+              padding: const EdgeInsets.only(bottom: 16.0, top: 8.0, right: 8.0, left: 8.0),
               child: MessageWidget(
                 msg: msg.replyToRef!,
                 isReply: false,
@@ -557,39 +510,22 @@ class MessageWidgetPretty extends StatelessWidget {
         Container(
           width: isReply ? MediaQuery.sizeOf(context).width : null,
           decoration: BoxDecoration(
-            color: isReply
-                ? Theme.of(context).colorScheme.primary.darken(0.5)
-                : null,
+            color: isReply ? Theme.of(context).colorScheme.primary.darken(0.5) : null,
             gradient: !isReply
                 ? LinearGradient(
                     colors: right
-                        ? [
-                            Colors.transparent,
-                            msg.messageType.contains('/')
-                                ? Colors.blue
-                                : Theme.of(context).colorScheme.primary
-                          ]
-                        : [
-                            msg.messageType.contains('/')
-                                ? Colors.blue
-                                : Theme.of(context).colorScheme.primary,
-                            Colors.transparent
-                          ],
+                        ? [Colors.transparent, msg.messageType.contains('/') ? Colors.blue : Theme.of(context).colorScheme.primary]
+                        : [msg.messageType.contains('/') ? Colors.blue : Theme.of(context).colorScheme.primary, Colors.transparent],
                     stops: right ? const [0.95, 1] : const [0, 0.05])
                 : null,
             borderRadius: isReply
                 ? null
                 : right
-                    ? const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        bottomLeft: Radius.circular(16))
-                    : const BorderRadius.only(
-                        topRight: Radius.circular(16),
-                        bottomRight: Radius.circular(16)),
+                    ? const BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16))
+                    : const BorderRadius.only(topRight: Radius.circular(16), bottomRight: Radius.circular(16)),
           ),
           child: Padding(
-            padding: const EdgeInsets.only(
-                bottom: 16.0, top: 8.0, right: 8.0, left: 8.0),
+            padding: const EdgeInsets.only(bottom: 16.0, top: 8.0, right: 8.0, left: 8.0),
             child: getMessageWidget(),
           ),
         ),

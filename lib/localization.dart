@@ -9,17 +9,14 @@ class Localization {
   static const email = 'Email';
   static const password = 'Password';
   static const reEnterPassword = 'Password Confirmation';
-  static const validatePassword =
-      'Password must be longer than 8 characters and contain 2 letters.';
+  static const validatePassword = 'Password must be longer than 8 characters and contain 2 letters.';
   static const validateRePassword = 'The passwords do not match.';
 
   static const validateEmail = 'This is not a valid email.';
-  static const emailAlreadyRegistered =
-      'This email has already been registered.';
+  static const emailAlreadyRegistered = 'This email has already been registered.';
   static const emailCantBeEmpty = 'The email field cannot be empty.';
   static const passwordCantBeEmpty = 'The password field cannot be empty.';
-  static const rePasswordCantBeEmpty =
-      'The password confirmation field cannot be empty.';
+  static const rePasswordCantBeEmpty = 'The password confirmation field cannot be empty.';
   static const usernameCantBeEmpty = 'The email field cannot be empty.';
   static const invalidEmail = 'The email you entered is invalid';
   static const noAccount = "Don't have an account? Click here.";
@@ -36,8 +33,7 @@ class Localization {
   static const makeRoom = 'Find a room';
   static const confirmRoomCode = 'Confirm Room Code';
   static const createRoomCode = 'You can also create your own code to share';
-  static const expiredCode =
-      'The code you used is expired, please use a different one';
+  static const expiredCode = 'The code you used is expired, please use a different one';
   static const fillAllFields = 'Please fill all text fields';
   static const success = 'Success!';
   static const copiedToClipboard = 'Text was copied to clipboard';
@@ -45,12 +41,9 @@ class Localization {
   static const confirmDecision = 'Please confirm your decision.';
   static const disconnect = 'Disconnect';
 
-  static const onboarding_1 =
-      'Welcome to LoveCode, the app where you can intimately speak to your partner, away from all the noise.';
-  static const onboarding_2 =
-      'Here you can chat normally, or use fun commands to spice up the conversation.';
-  static const onboarding_3 =
-      'The options are endless, are you ready? Click on Go!';
+  static const onboarding_1 = 'Welcome to LoveCode, the app where you can intimately speak to your partner, away from all the noise.';
+  static const onboarding_2 = 'Here you can chat normally, or use fun commands to spice up the conversation.';
+  static const onboarding_3 = 'The options are endless, are you ready? Click on Go!';
 
   static const forgotPassword = 'Forgot your password? click here to reset it.';
   static const resetEmailSent = 'Your password reset email was sent.';
@@ -63,4 +56,5 @@ class Localization {
   static const later = 'Later';
 
   static const send = 'Send';
+  static const clear = 'Clear';
 }

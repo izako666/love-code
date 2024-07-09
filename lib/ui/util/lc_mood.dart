@@ -85,7 +85,7 @@ class _LcMoodSetterState extends State<LcMoodSetter> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: TextField(
                       controller: messageController,
-                      maxLength: 64,
+                      maxLength: 32,
                       decoration: const InputDecoration(
                         hintText: "How are you feeling?",
                       ),
@@ -93,14 +93,31 @@ class _LcMoodSetterState extends State<LcMoodSetter> {
                     ),
                   ),
                 ),
-                LcButton(
-                  width: 92,
-                  height: 32,
-                  text: Localization.send,
-                  onPressed: () {
-                    Auth.instance().setMood(currentEmoji?.name ?? '', messageController.text);
-                    Get.back();
-                  },
+                Column(
+                  children: [
+                    const SizedBox(
+                      height: 48,
+                    ),
+                    LcButton(
+                      width: 92,
+                      height: 32,
+                      text: Localization.send,
+                      onPressed: () {
+                        Auth.instance().setMood(currentEmoji?.name ?? '', messageController.text);
+                        Get.back();
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    LcButton(
+                      width: 92,
+                      height: 32,
+                      text: Localization.clear,
+                      onPressed: () {
+                        Auth.instance().setMood('', '');
+                        Get.back();
+                      },
+                    ),
+                  ],
                 )
               ],
             ),

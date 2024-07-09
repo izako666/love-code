@@ -88,152 +88,132 @@ class _LcMenuDrawerState extends State<LcMenuDrawer> {
                         Obx(
                           () => Row(
                             children: [
-                              Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      showIzBottomSheet(
-                                          context: context,
-                                          height: MediaQuery.of(context).size.height * 0.5,
-                                          child: Column(
-                                            children: [
-                                              LcButton(
-                                                text: 'Update Profile Pic',
-                                                onPressed: () async {
-                                                  final PermissionState ps = await PhotoManager
-                                                      .requestPermissionExtend(); // the method can use optional param `permission`.
-                                                  if (ps.isAuth) {
-                                                    // Granted
-                                                    // You can to get assets here.
-                                                  } else if (ps.hasAccess) {
-                                                    // Access will continue, but the amount visible depends on the user's selection.
-                                                  } else {
-                                                    return;
-                                                    // Limited(iOS) or Rejected, use `==` for more precise judgements.
-                                                    // You can call `PhotoManager.openSetting()` to open settings for further steps.
-                                                  }
-                                                  if (!context.mounted) {
-                                                    Get.back();
-                                                    return;
-                                                  }
+                              ProfilePictureWidget(
+                                userId: Auth.instance().user.value!.uid,
+                                onTapEmoji: () {
+                                  showLcDialog(width: 500, height: 300, body: const LcMoodSetter(), barrierDismissible: true);
+                                },
+                                onTap: () {
+                                  showIzBottomSheet(
+                                      context: context,
+                                      height: MediaQuery.of(context).size.height * 0.5,
+                                      child: Column(
+                                        children: [
+                                          LcButton(
+                                            text: 'Update Profile Pic',
+                                            onPressed: () async {
+                                              final PermissionState ps = await PhotoManager
+                                                  .requestPermissionExtend(); // the method can use optional param `permission`.
+                                              if (ps.isAuth) {
+                                                // Granted
+                                                // You can to get assets here.
+                                              } else if (ps.hasAccess) {
+                                                // Access will continue, but the amount visible depends on the user's selection.
+                                              } else {
+                                                return;
+                                                // Limited(iOS) or Rejected, use `==` for more precise judgements.
+                                                // You can call `PhotoManager.openSetting()` to open settings for further steps.
+                                              }
+                                              if (!context.mounted) {
+                                                Get.back();
+                                                return;
+                                              }
 
-                                                  Get.back();
-                                                  imagePickerBottomSheet(context, onImageTap: (path, asset) async {
-                                                    Uint8List data = await (await asset.file)!.readAsBytes();
-                                                    Uint8List? croppedImage = await showLcDialog<Uint8List?>(
-                                                        title: 'Crop your Image',
-                                                        width: 400.w,
-                                                        height: 0.7.sh,
-                                                        alignment: Alignment.topCenter,
-                                                        body: ImageCropper(image: data));
-                                                    if (croppedImage != null) {
-                                                      Auth.instance().setProfilePicture(croppedImage);
-                                                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                                                        Get.back();
-                                                      });
-                                                    }
+                                              Get.back();
+                                              imagePickerBottomSheet(context, onImageTap: (path, asset) async {
+                                                Uint8List data = await (await asset.file)!.readAsBytes();
+                                                Uint8List? croppedImage = await showLcDialog<Uint8List?>(
+                                                    title: 'Crop your Image',
+                                                    width: 400.w,
+                                                    height: 0.7.sh,
+                                                    alignment: Alignment.topCenter,
+                                                    body: ImageCropper(image: data));
+                                                if (croppedImage != null) {
+                                                  Auth.instance().setProfilePicture(croppedImage);
+                                                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                                                    Get.back();
                                                   });
-                                                },
-                                              )
-                                            ],
-                                          ));
-                                    },
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(48),
-                                      child: Image.network(
-                                        Auth.instance().userData.value != null
-                                            ? Auth.instance().userData.value!.data()!['profile_url'] ?? ''
-                                            : '',
-                                        width: 48.w,
-                                        height: 48.w,
-                                        errorBuilder: (ctx, o, trace) {
-                                          return Icon(Icons.person, size: 48.w);
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    right: -10,
-                                    bottom: -10,
-                                    child: (Auth.instance().userData.value != null &&
-                                            Auth.instance().userData.value!.data() != null &&
-                                            Auth.instance().userData.value!.data()!['mood_emoji'] != null &&
-                                            Auth.instance().userData.value!.data()!['mood_emoji'] != '')
-                                        ? GestureDetector(
-                                            onTap: () {
-                                              showLcDialog(width: 500, height: 300, body: const LcMoodSetter(), barrierDismissible: true);
+                                                }
+                                              });
                                             },
-                                            child: Image.asset(
-                                                Emojis.fromName(Auth.instance().userData.value!.data()!['mood_emoji'])!.image,
-                                                scale: 0.4,
-                                                filterQuality: FilterQuality.none,
-                                                width: 32,
-                                                height: 32),
                                           )
-                                        : IconButton(
-                                            icon: const Icon(Icons.add, size: 24),
-                                            onPressed: () {
-                                              showLcDialog(width: 500, height: 300, body: const LcMoodSetter(), barrierDismissible: true);
-                                            },
-                                          ),
-                                  )
-                                ],
+                                        ],
+                                      ));
+                                },
                               ),
                               const SizedBox(width: 8),
-                              TapRegion(
-                                  onTapInside: (evt) {
-                                    bool shouldSetState = !isEditingName;
-                                    isEditingName = true;
-                                    nameController.text =
-                                        Auth.instance().userData.value != null ? Auth.instance().userData.value!.data()!['userName'] : '';
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  TapRegion(
+                                      onTapInside: (evt) {
+                                        bool shouldSetState = !isEditingName;
+                                        isEditingName = true;
+                                        nameController.text = Auth.instance().userData.value != null
+                                            ? Auth.instance().userData.value!.data()!['userName']
+                                            : '';
 
-                                    if (shouldSetState) {
-                                      setState(() {});
-                                      nameNode.requestFocus();
-                                    }
-                                  },
-                                  onTapOutside: (evt) async {
-                                    bool shouldSetState = isEditingName;
-                                    isEditingName = false;
-                                    if (shouldSetState) {
-                                      if ((Auth.instance().userData.value?.data()?['userName'] ?? '') != nameController.text) {
-                                        await Auth.instance().setName(nameController.text);
-                                      }
-                                      setState(() {});
-                                    }
-                                  },
-                                  child: isEditingName
-                                      ? Container(
-                                          width: 125.w,
-                                          height: 25.w,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(16),
-                                            color: backgroundColor.withAlpha(120),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                                            child: TextField(
-                                              controller: nameController,
-                                              focusNode: nameNode,
-                                              style: Theme.of(context).textTheme.headlineMedium,
-                                            ),
-                                          ),
-                                        )
-                                      : Container(
-                                          width: 125.w,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(16),
-                                            color: backgroundColor.withAlpha(120),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                                            child: Text(
-                                              Auth.instance().userData.value?.data()?['userName'] ?? '',
-                                              softWrap: true,
-                                              style: Theme.of(context).textTheme.headlineMedium,
-                                            ),
-                                          )))
+                                        if (shouldSetState) {
+                                          setState(() {});
+                                          nameNode.requestFocus();
+                                        }
+                                      },
+                                      onTapOutside: (evt) async {
+                                        bool shouldSetState = isEditingName;
+                                        isEditingName = false;
+                                        if (shouldSetState) {
+                                          if ((Auth.instance().userData.value?.data()?['userName'] ?? '') != nameController.text) {
+                                            await Auth.instance().setName(nameController.text);
+                                          }
+                                          setState(() {});
+                                        }
+                                      },
+                                      child: isEditingName
+                                          ? Container(
+                                              width: 125.w,
+                                              height: 25.w,
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(16),
+                                                color: backgroundColor.withAlpha(120),
+                                              ),
+                                              child: Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                                child: TextField(
+                                                  controller: nameController,
+                                                  focusNode: nameNode,
+                                                  style: Theme.of(context).textTheme.headlineMedium,
+                                                ),
+                                              ),
+                                            )
+                                          : Container(
+                                              width: 125.w,
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(16),
+                                                color: backgroundColor.withAlpha(120),
+                                              ),
+                                              child: Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                                child: Text(
+                                                  Auth.instance().userData.value?.data()?['userName'] ?? '',
+                                                  softWrap: true,
+                                                  style: Theme.of(context).textTheme.headlineMedium,
+                                                ),
+                                              ))),
+                                  const SizedBox(height: 8),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                    child: SizedBox(
+                                      width: 150,
+                                      child: Text(
+                                        Auth.instance().userData.value?.data()?['mood_message'] ?? '',
+                                        style: Theme.of(context).textTheme.bodyMedium,
+                                        softWrap: true,
+                                        maxLines: 4,
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              )
                             ],
                           ),
                         ),
@@ -341,6 +321,66 @@ class _LcMenuDrawerState extends State<LcMenuDrawer> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class ProfilePictureWidget extends StatelessWidget {
+  const ProfilePictureWidget({
+    super.key,
+    this.onTap,
+    required this.userId,
+    this.onTapEmoji,
+    this.width,
+    this.height,
+  });
+  final Function()? onTap;
+  final Function()? onTapEmoji;
+  final String userId;
+  final double? width;
+  final double? height;
+  @override
+  Widget build(BuildContext context) {
+    dynamic userData =
+        userId == Auth.instance().user.value!.uid ? Auth.instance().userData.value : ChatController.instance().recipientData.value;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        GestureDetector(
+          onTap: onTap,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(48),
+            child: Image.network(
+              userData != null ? userData!.data()!['profile_url'] ?? '' : '',
+              width: width ?? 48.w,
+              height: height ?? 48.w,
+              errorBuilder: (ctx, o, trace) {
+                return Icon(Icons.person, size: 48.w);
+              },
+            ),
+          ),
+        ),
+        Positioned(
+          right: width != null ? -(width! / 8) : -12,
+          bottom: height != null ? -(height! / 8) : -12,
+          child: (userData != null &&
+                  userData!.data() != null &&
+                  userData!.data()!['mood_emoji'] != null &&
+                  userData!.data()!['mood_emoji'] != '')
+              ? GestureDetector(
+                  onTap: onTapEmoji,
+                  child: Image.asset(Emojis.fromName(userData!.data()!['mood_emoji'])!.image,
+                      scale: 0.4,
+                      filterQuality: FilterQuality.none,
+                      width: width != null ? width! / 4 : 32,
+                      height: height != null ? height! / 4 : 32),
+                )
+              : IconButton(
+                  icon: Icon(Icons.add, size: width != null ? width! / 5 : 24),
+                  onPressed: onTapEmoji,
+                ),
+        )
+      ],
     );
   }
 }
