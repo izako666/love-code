@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,6 +30,7 @@ class ChatController extends GetxController {
   static ChatController instance() => Get.find<ChatController>();
   RxList<Message> messages = RxList<Message>();
   Rx<String> recipientId = ''.obs;
+  RxList<String> stickers = RxList<String>();
   Rx<String?> chatRoom = Rx<String?>(null);
   Rx<DocumentSnapshot<Map<String, dynamic>>?> recipientData = Rx<DocumentSnapshot<Map<String, dynamic>>?>(null);
   RxBool findingChatRoom = true.obs;
@@ -198,6 +200,16 @@ class ChatController extends GetxController {
     });
   }
 
+  Future<void> pushStickerNotification({required String messageId, required DateTime timeStamp}) async {
+    String recipId = await FirestoreHandler.instance().getRecipientId(chatRoom.value!);
+    HttpHandler.post('/send_notification', {
+      'title': 'New Message',
+      'message': '${Auth.instance().user.value!.displayName} sent you a sticker.   ${Helper.formatTime(timeStamp)}',
+      'user_id': recipId,
+      'message_id': messageId
+    });
+  }
+
   Future<void> pushAlertNotification({required String message, required String messageId, required DateTime timeStamp}) async {
     String recipId = await FirestoreHandler.instance().getRecipientId(chatRoom.value!);
     HttpHandler.post('/send_notification_alert',
@@ -233,9 +245,24 @@ class ChatController extends GetxController {
       Get.log('recipient stream finished');
     });
   }
+
+  Future<List<String>> getStickers() async {
+    List<String> sticrs = await FirestoreHandler.instance().getStickers(chatRoom.value!);
+    stickers.clear();
+    stickers.addAll([...sticrs]);
+    return sticrs;
+  }
+
+  Future<void> uploadSticker(Uint8List img) async {
+    await FirestoreHandler.instance().uploadSticker(chatRoom.value!, img);
+  }
+
+  Future<String> sendStickerMessage(String sticker, Message message) async {
+    return await FirestoreHandler.instance().sendStickerMessage(sticker, chatRoom.value!, message);
+  }
 }
 
-enum MESSAGETYPES { text, audio, draw }
+enum MESSAGETYPES { text, audio, draw, sticker }
 
 extension IdExtension on MESSAGETYPES {
   String get id {

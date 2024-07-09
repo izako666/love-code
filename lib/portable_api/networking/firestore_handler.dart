@@ -8,6 +8,7 @@ import 'package:love_code/constants.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
 import 'package:love_code/portable_api/chat/state/chat_controller.dart';
+import 'package:uuid/uuid.dart';
 
 class FirestoreHandler extends GetxController {
   final FirebaseFirestore db = FirebaseFirestore.instance;
@@ -23,10 +24,7 @@ class FirestoreHandler extends GetxController {
 
   Future<bool> signUpUser(String userId, String email, String user) async {
     try {
-      await db
-          .collection(Constants.fireStoreUsers)
-          .doc(userId)
-          .set({'email': email, 'username': user});
+      await db.collection(Constants.fireStoreUsers).doc(userId).set({'email': email, 'username': user});
       return true;
     } catch (e) {
       printError(info: e.toString());
@@ -35,11 +33,7 @@ class FirestoreHandler extends GetxController {
   }
 
   Future<DocumentReference?> sendMessage(chatId, Message message) async {
-    return await db
-        .collection(Constants.fireStoreRooms)
-        .doc(chatId)
-        .collection(Constants.msgBox)
-        .add({
+    return await db.collection(Constants.fireStoreRooms).doc(chatId).collection(Constants.msgBox).add({
       'message': message.message,
       'timestamp': Timestamp.fromDate(message.timeStamp),
       'sender_id': message.senderId,
@@ -51,11 +45,7 @@ class FirestoreHandler extends GetxController {
   }
 
   Future<List<Message>> getMessages(String chatId) async {
-    QuerySnapshot<Map<String, dynamic>> snap = await db
-        .collection(Constants.fireStoreRooms)
-        .doc(chatId)
-        .collection(Constants.msgBox)
-        .get();
+    QuerySnapshot<Map<String, dynamic>> snap = await db.collection(Constants.fireStoreRooms).doc(chatId).collection(Constants.msgBox).get();
 
     return docsToMessages(snap);
   }
@@ -88,12 +78,7 @@ class FirestoreHandler extends GetxController {
   }
 
   Future<void> deleteMessage(chatId, Message message) async {
-    await db
-        .collection(Constants.fireStoreRooms)
-        .doc(chatId)
-        .collection(Constants.msgBox)
-        .doc(message.messageId)
-        .delete();
+    await db.collection(Constants.fireStoreRooms).doc(chatId).collection(Constants.msgBox).doc(message.messageId).delete();
   }
 
   Future<void> editMessage(chatId, Message message, String newMessage) async {
@@ -106,25 +91,19 @@ class FirestoreHandler extends GetxController {
   }
 
   DocumentReference getDocRef(String chatId, String msgId) {
-    return db
-        .collection(Constants.fireStoreRooms)
-        .doc(chatId)
-        .collection(Constants.msgBox)
-        .doc(msgId);
+    return db.collection(Constants.fireStoreRooms).doc(chatId).collection(Constants.msgBox).doc(msgId);
   }
 
   Future<String?> findChatRoom(String userId) async {
     Query<Map<String, dynamic>> query = db
         .collection(Constants.fireStoreRooms)
-        .where(Filter.or(Filter('user_id', isEqualTo: userId),
-            Filter('other_user_id', isEqualTo: userId)));
+        .where(Filter.or(Filter('user_id', isEqualTo: userId), Filter('other_user_id', isEqualTo: userId)));
     QuerySnapshot<Map<String, dynamic>> snapshot = await query.limit(1).get();
     return snapshot.docs.isEmpty ? null : snapshot.docs.first.id;
   }
 
   Future<List<String>> getExistingCodes() async {
-    List<QueryDocumentSnapshot> snapshots =
-        (await db.collection(Constants.fireStoreCodes).get()).docs;
+    List<QueryDocumentSnapshot> snapshots = (await db.collection(Constants.fireStoreCodes).get()).docs;
     List<String> codes = List.empty(growable: true);
     for (int i = 0; i < snapshots.length; i++) {
       Map<String, dynamic>? data = snapshots[i].data() as Map<String, dynamic>?;
@@ -136,25 +115,18 @@ class FirestoreHandler extends GetxController {
   }
 
   Future<void> addRoomCode(String roomCode) async {
-    db.collection(Constants.fireStoreCodes).add({
-      'code': roomCode,
-      'owner_id': Auth.instance().user.value!.uid,
-      'timestamp': Timestamp.fromDate(DateTime.now())
-    });
+    db
+        .collection(Constants.fireStoreCodes)
+        .add({'code': roomCode, 'owner_id': Auth.instance().user.value!.uid, 'timestamp': Timestamp.fromDate(DateTime.now())});
   }
 
   Future<String> confirmRoomCode(String code) async {
-    List<QueryDocumentSnapshot> snapshots =
-        (await db.collection(Constants.fireStoreCodes).get()).docs;
+    List<QueryDocumentSnapshot> snapshots = (await db.collection(Constants.fireStoreCodes).get()).docs;
     for (int i = 0; i < snapshots.length; i++) {
       Map<String, dynamic>? data = snapshots[i].data() as Map<String, dynamic>?;
       if (data == null) continue;
       if (data['code'] == code) {
-        if ((data['timestamp'] as Timestamp)
-                .toDate()
-                .difference(DateTime.now())
-                .inMinutes >=
-            60) {
+        if ((data['timestamp'] as Timestamp).toDate().difference(DateTime.now()).inMinutes >= 60) {
           return 'expired';
         } else {
           if (data['owner_id'] == Auth.instance().user.value!.uid) {
@@ -169,8 +141,8 @@ class FirestoreHandler extends GetxController {
   }
 
   Future<String> createChat(String userId) async {
-    DocumentReference doc = await db.collection(Constants.fireStoreRooms).add(
-        {'user_id': userId, 'other_user_id': Auth.instance().user.value!.uid});
+    DocumentReference doc =
+        await db.collection(Constants.fireStoreRooms).add({'user_id': userId, 'other_user_id': Auth.instance().user.value!.uid});
     doc.collection(Constants.msgBox);
     return doc.id;
   }
@@ -184,26 +156,16 @@ class FirestoreHandler extends GetxController {
   }
 
   void pushToken(String fcmToken) async {
-    await db
-        .collection(Constants.fireStoreUsers)
-        .doc(Auth.instance().user.value!.uid)
-        .update({'push_token': fcmToken});
+    await db.collection(Constants.fireStoreUsers).doc(Auth.instance().user.value!.uid).update({'push_token': fcmToken});
   }
 
   Future<String> getRecipientId(String chatId) async {
-    dynamic data =
-        (await db.collection(Constants.fireStoreRooms).doc(chatId).get())
-            .data();
-    return data['user_id'] == Auth.instance().user.value!.uid
-        ? data['other_user_id']
-        : data['user_id'];
+    dynamic data = (await db.collection(Constants.fireStoreRooms).doc(chatId).get()).data();
+    return data['user_id'] == Auth.instance().user.value!.uid ? data['other_user_id'] : data['user_id'];
   }
 
   Future<void> createUserDoc(String uid, String userName) async {
-    await db
-        .collection(Constants.fireStoreUsers)
-        .doc(uid)
-        .set({'userName': userName});
+    await db.collection(Constants.fireStoreUsers).doc(uid).set({'userName': userName});
   }
 
   Future<String> uploadAudioFile(String fileName, File file) async {
@@ -218,13 +180,8 @@ class FirestoreHandler extends GetxController {
     return await fileRef.getDownloadURL();
   }
 
-  Future<String?> sendDrawMessage(
-      Uint8List file, String chatId, Message message) async {
-    DocumentReference doc = await db
-        .collection(Constants.fireStoreRooms)
-        .doc(chatId)
-        .collection(Constants.msgBox)
-        .add({
+  Future<String?> sendDrawMessage(Uint8List file, String chatId, Message message) async {
+    DocumentReference doc = await db.collection(Constants.fireStoreRooms).doc(chatId).collection(Constants.msgBox).add({
       'message': message.message,
       'timestamp': Timestamp.fromDate(message.timeStamp),
       'sender_id': message.senderId,
@@ -244,14 +201,9 @@ class FirestoreHandler extends GetxController {
     return doc.id;
   }
 
-  Future<void> sendAudioMessage(String fileName, File file, String chatId,
-      Message message, List<double> waves) async {
+  Future<void> sendAudioMessage(String fileName, File file, String chatId, Message message, List<double> waves) async {
     String url = await uploadAudioFile(fileName, file);
-    db
-        .collection(Constants.fireStoreRooms)
-        .doc(chatId)
-        .collection(Constants.msgBox)
-        .add({
+    db.collection(Constants.fireStoreRooms).doc(chatId).collection(Constants.msgBox).add({
       'message': message.message,
       'timestamp': Timestamp.fromDate(message.timeStamp),
       'sender_id': message.senderId,
@@ -267,26 +219,14 @@ class FirestoreHandler extends GetxController {
   }
 
   Future<String> getProfilePicture() async {
-    DocumentSnapshot<Map<String, dynamic>> snap = await db
-        .collection(Constants.fireStoreUsers)
-        .doc(Auth.instance().user.value!.uid)
-        .get();
+    DocumentSnapshot<Map<String, dynamic>> snap = await db.collection(Constants.fireStoreUsers).doc(Auth.instance().user.value!.uid).get();
     return snap.data()!['profile_url'] ?? '';
   }
 
   Future<void> setProfilePicture(Uint8List file) async {
-    await storage
-        .ref('profiles')
-        .child(Auth.instance().user.value!.uid)
-        .putData(file);
-    String downloadUrl = await storage
-        .ref('profiles')
-        .child(Auth.instance().user.value!.uid)
-        .getDownloadURL();
-    await db
-        .collection(Constants.fireStoreUsers)
-        .doc(Auth.instance().user.value!.uid)
-        .update({'profile_url': downloadUrl});
+    await storage.ref('profiles').child(Auth.instance().user.value!.uid).putData(file);
+    String downloadUrl = await storage.ref('profiles').child(Auth.instance().user.value!.uid).getDownloadURL();
+    await db.collection(Constants.fireStoreUsers).doc(Auth.instance().user.value!.uid).update({'profile_url': downloadUrl});
   }
 
   Future<void> setUserMood(String emoji, String moodText) async {
@@ -294,5 +234,36 @@ class FirestoreHandler extends GetxController {
         .collection(Constants.fireStoreUsers)
         .doc(Auth.instance().user.value!.uid)
         .update({'mood_emoji': emoji, 'mood_message': moodText});
+  }
+
+  Future<List<String>> getStickers(String chatId) async {
+    DocumentSnapshot<Map<String, dynamic>> doc = await db.collection(Constants.fireStoreRooms).doc(chatId).get();
+    return doc.data() != null ? List<String>.from(doc.data()!['stickers'] ?? []) : [];
+  }
+
+  Future<void> uploadSticker(String chatId, Uint8List img) async {
+    String id = const Uuid().v4();
+    Reference fileRef = storage.ref('stickers').child(chatId).child(id);
+    await fileRef.putData(img);
+    String downloadUrl = await fileRef.getDownloadURL();
+
+    db.collection(Constants.fireStoreRooms).doc(chatId).update({
+      'stickers': FieldValue.arrayUnion([downloadUrl])
+    });
+  }
+
+  Future<String> sendStickerMessage(String sticker, String chatId, Message message) async {
+    return (await db.collection(Constants.fireStoreRooms).doc(chatId).collection(Constants.msgBox).add({
+      'message': message.message,
+      'timestamp': Timestamp.fromDate(message.timeStamp),
+      'sender_id': message.senderId,
+      if (message.replyToRef != null) ...{
+        'reply_to_message': message.replyToRef!.message,
+        'reply_to_date': Timestamp.fromDate(message.replyToRef!.timeStamp)
+      },
+      'message_type': 'sticker',
+      'file_url': sticker,
+    }))
+        .id;
   }
 }

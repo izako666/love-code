@@ -12,8 +12,7 @@ import 'package:love_code/ui/util/lc_scaffold.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 
-Future<T?> imagePickerBottomSheet<T>(BuildContext context,
-    {required Function(AssetPathEntity album, AssetEntity image)? onImageTap}) {
+Future<T?> imagePickerBottomSheet<T>(BuildContext context, {required Function(AssetPathEntity album, AssetEntity image)? onImageTap}) {
   return showIzBottomSheet<T>(
       context: context,
       width: MediaQuery.sizeOf(context).width,
@@ -48,9 +47,7 @@ class _ImagePickerState extends State<ImagePicker> {
   void initState() {
     imgScrollController = ScrollController(keepScrollOffset: true);
     imgScrollController.addListener(() async {
-      if (imgScrollController.position.pixels >=
-              imgScrollController.position.maxScrollExtent &&
-          !loadingMoreImages) {
+      if (imgScrollController.position.pixels >= imgScrollController.position.maxScrollExtent && !loadingMoreImages) {
         loadingMoreImages = true;
         setState(() {});
         await loadMoreImages();
@@ -64,8 +61,7 @@ class _ImagePickerState extends State<ImagePicker> {
 
   void loadData() async {
     List<AssetPathEntity> loadedAlbums = await IzPhotoManager.loadAlbums();
-    List<AssetEntity> photos =
-        await IzPhotoManager.loadImages(loadedAlbums[0], 0, 24);
+    List<AssetEntity> photos = await IzPhotoManager.loadImages(loadedAlbums[0], 0, 24);
     albums = loadedAlbums;
     currentAlbum = albums![0];
     currentPhotos = photos;
@@ -75,14 +71,11 @@ class _ImagePickerState extends State<ImagePicker> {
   Future<void> loadMoreImages() async {
     int albumAssetCount = await currentAlbum!.assetCountAsync;
     int start = currentPhotos!.length;
-    int end = (currentPhotos!.length + 24) > albumAssetCount
-        ? albumAssetCount
-        : (currentPhotos!.length + 24);
+    int end = (currentPhotos!.length + 24) > albumAssetCount ? albumAssetCount : (currentPhotos!.length + 24);
     if (currentPhotos!.length == albumAssetCount) {
       return;
     }
-    List<AssetEntity> photos =
-        await IzPhotoManager.loadImages(currentAlbum!, start, end);
+    List<AssetEntity> photos = await IzPhotoManager.loadImages(currentAlbum!, start, end);
     currentPhotos!.addAll(photos);
   }
 
@@ -107,20 +100,14 @@ class _ImagePickerState extends State<ImagePicker> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (albums == null || currentPhotos == null)
-            const Center(child: CircularProgressIndicator()),
+          if (albums == null || currentPhotos == null) const Center(child: CircularProgressIndicator()),
           if (albums != null && currentPhotos != null) ...[
             TextButton(
               child: Row(
                 children: [
                   Text(currentAlbum!.name,
-                      style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                          fontSize: 18, decoration: TextDecoration.underline)),
-                  Icon(
-                      selectingPhotos
-                          ? Icons.arrow_drop_down_rounded
-                          : Icons.arrow_drop_up_rounded,
-                      color: Colors.white)
+                      style: Theme.of(context).textTheme.labelLarge!.copyWith(fontSize: 18, decoration: TextDecoration.underline)),
+                  Icon(selectingPhotos ? Icons.arrow_drop_down_rounded : Icons.arrow_drop_up_rounded, color: Colors.white)
                 ],
               ),
               onPressed: () {
@@ -148,13 +135,9 @@ class _ImagePickerState extends State<ImagePicker> {
                           itemCount: loadingMoreImages
                               ? ((currentPhotos!.length % 3) == 0
                                   ? currentPhotos!.length + 3
-                                  : currentPhotos!.length +
-                                      3 +
-                                      (currentPhotos!.length % 3))
+                                  : currentPhotos!.length + 3 + (currentPhotos!.length % 3))
                               : currentPhotos!.length,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 3),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
                           itemBuilder: (ctx, i) {
                             return (i < currentPhotos!.length)
                                 ? Padding(
@@ -162,49 +145,30 @@ class _ImagePickerState extends State<ImagePicker> {
                                     child: InkWell(
                                       onTap: () {
                                         if (widget.onImageTap != null) {
-                                          widget.onImageTap!(
-                                              currentAlbum!, currentPhotos![i]);
+                                          widget.onImageTap!(currentAlbum!, currentPhotos![i]);
                                         }
                                       },
                                       child: AssetEntityImage(
                                         currentPhotos![i],
                                         isOriginal: false,
-                                        thumbnailSize:
-                                            const ThumbnailSize.square(250),
+                                        thumbnailSize: const ThumbnailSize.square(250),
                                         fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stacktrace) {
-                                          return const Center(
-                                              child: Icon(Icons.error,
-                                                  color: Colors.red));
+                                        errorBuilder: (context, error, stacktrace) {
+                                          return const Center(child: Icon(Icons.error, color: Colors.red));
                                         },
                                       ),
                                     ))
                                 : (i ==
                                         currentPhotos!.length +
-                                            (((currentPhotos!.length % 3) == 0
-                                                    ? 3
-                                                    : 3 +
-                                                        (currentPhotos!.length %
-                                                            3)) -
-                                                2))
-                                    ? const SizedBox(
-                                        width: 50,
-                                        height: 50,
-                                        child: Center(
-                                            child: CircularProgressIndicator()))
-                                    : Container(
-                                        width: 50,
-                                        height: 50,
-                                        color: Colors.transparent);
+                                            (((currentPhotos!.length % 3) == 0 ? 3 : 3 + (currentPhotos!.length % 3)) - 2))
+                                    ? const SizedBox(width: 50, height: 50, child: Center(child: CircularProgressIndicator()))
+                                    : Container(width: 50, height: 50, color: Colors.transparent);
                           })
                       : (loadedThumbnails && albumThumbnails != null)
                           ? GridView.builder(
                               shrinkWrap: true,
                               itemCount: albums!.length,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
                               itemBuilder: (ctx, i) {
                                 return Padding(
                                     padding: const EdgeInsets.all(16),
@@ -218,30 +182,23 @@ class _ImagePickerState extends State<ImagePicker> {
                                         child: Container(
                                           child: Column(
                                             mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
+                                            crossAxisAlignment: CrossAxisAlignment.center,
                                             children: [
                                               SizedBox(
                                                 width: 180,
                                                 height: 150,
                                                 child: ClipRRect(
                                                   clipBehavior: Clip.hardEdge,
-                                                  borderRadius:
-                                                      BorderRadius.circular(16),
+                                                  borderRadius: BorderRadius.circular(16),
                                                   child: AssetEntityImage(
                                                     albumThumbnails![i],
                                                     isOriginal: false,
                                                     fit: BoxFit.cover,
-                                                    thumbnailSize:
-                                                        const ThumbnailSize
-                                                            .square(360),
+                                                    thumbnailSize: const ThumbnailSize.square(360),
                                                   ),
                                                 ),
                                               ),
-                                              Text(albums![i].name,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .titleSmall)
+                                              Text(albums![i].name, style: Theme.of(context).textTheme.titleSmall)
                                             ],
                                           ),
                                         ),
@@ -262,20 +219,16 @@ class _ImagePickerState extends State<ImagePicker> {
 
 class IzPhotoManager {
   static Future<List<AssetPathEntity>> loadAlbums() async {
-    List<AssetPathEntity> albums =
-        await PhotoManager.getAssetPathList(type: RequestType.image);
+    List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(type: RequestType.image);
     return albums;
   }
 
-  static Future<List<AssetEntity>> loadImages(
-      AssetPathEntity selectedAlbum, int start, int end) async {
-    List<AssetEntity> imageList =
-        await selectedAlbum.getAssetListRange(start: start, end: end);
+  static Future<List<AssetEntity>> loadImages(AssetPathEntity selectedAlbum, int start, int end) async {
+    List<AssetEntity> imageList = await selectedAlbum.getAssetListRange(start: start, end: end);
     return imageList;
   }
 
-  static Future<List<AssetEntity>> loadAlbumThumbnails(
-      List<AssetPathEntity> albums) async {
+  static Future<List<AssetEntity>> loadAlbumThumbnails(List<AssetPathEntity> albums) async {
     List<AssetEntity> thumbnails = List.empty(growable: true);
     for (int i = 0; i < albums.length; i++) {
       thumbnails.add((await albums[i].getAssetListRange(start: 0, end: 1))[0]);
@@ -285,9 +238,9 @@ class IzPhotoManager {
 }
 
 class ImageCropper extends StatefulWidget {
-  const ImageCropper({super.key, required this.image});
+  const ImageCropper({super.key, required this.image, this.withCircleUi = true});
   final Uint8List image;
-
+  final bool withCircleUi;
   @override
   State<ImageCropper> createState() => _ImageCropperState();
 }
@@ -313,7 +266,7 @@ class _ImageCropperState extends State<ImageCropper> {
           width: 300.w,
           height: 200.w,
           child: Crop(
-            withCircleUi: true,
+            withCircleUi: widget.withCircleUi,
             image: widget.image,
             aspectRatio: 1.0,
             progressIndicator: const CircularProgressIndicator(),

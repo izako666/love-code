@@ -16,6 +16,9 @@ import 'package:love_code/portable_api/chat/widgets/image_message_widget.dart';
 import 'package:love_code/portable_api/chat/widgets/message_widget.dart';
 import 'package:love_code/portable_api/local_data/local_data.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
+import 'package:love_code/portable_api/sticker_manager.dart';
+import 'package:love_code/portable_api/ui/bottom_sheet.dart';
+import 'package:love_code/portable_api/ui/image_worker.dart';
 import 'package:love_code/ui/chat/widgets/menu_drawer.dart';
 import 'package:love_code/ui/helper/scrollable_text.dart';
 import 'package:love_code/ui/helper/ui_helper.dart';
@@ -77,19 +80,21 @@ class _ChatScreenState extends State<ChatScreen> {
                 _key.currentState!.openDrawer();
               },
             ),
-            title: Row(children: [
-              ProfilePictureWidget(userId: ChatController.instance().recipientId.value, width: 30.w, height: 30.w),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(ChatController.instance().recipientData.value?.data()?['userName'] ?? '',
-                      style: Theme.of(context).textTheme.bodyMedium),
-                  Text(ChatController.instance().recipientData.value?.data()?['mood_message'] ?? '',
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              )
-            ])),
+            title: Obx(
+              () => Row(children: [
+                ProfilePictureWidget(userId: ChatController.instance().recipientId.value, width: 30.w, height: 30.w),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(ChatController.instance().recipientData.value?.data()?['userName'] ?? '',
+                        style: Theme.of(context).textTheme.bodyMedium),
+                    Text(ChatController.instance().recipientData.value?.data()?['mood_message'] ?? '',
+                        style: Theme.of(context).textTheme.bodySmall),
+                  ],
+                )
+              ]),
+            )),
         body: Column(
           children: [
             const SizedBox(height: 32),
@@ -376,6 +381,50 @@ class _InputAreaState extends State<InputArea> {
     return Row(
       children: [
         if (!recording) ...[
+          IconButton(
+            icon: const Icon(Icons.image),
+            onPressed: () {
+              showIzBottomSheet(
+                  context: context,
+                  child: StickerPickerSheet(
+                    onTapNew: () {
+                      imagePickerBottomSheet(context, onImageTap: (album, img) async {
+                        Uint8List data = await (await img.file)!.readAsBytes();
+                        Uint8List? croppedImage = await showLcDialog<Uint8List?>(
+                            title: 'Crop your Image',
+                            width: 400.w,
+                            height: 0.7.sh,
+                            alignment: Alignment.topCenter,
+                            body: ImageCropper(
+                              image: data,
+                              withCircleUi: false,
+                            ));
+                        if (croppedImage != null) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            Get.back();
+                          });
+
+                          await ChatController.instance().uploadSticker(croppedImage);
+                          await ChatController.instance().getStickers();
+                        }
+                      });
+                    },
+                    onTapSticker: (s) async {
+                      Get.back();
+                      DateTime timeStamp = DateTime.now();
+                      Message message = Message(
+                        message: '',
+                        senderId: Auth.instance().user.value!.uid,
+                        timeStamp: timeStamp,
+                        messageType: MESSAGETYPES.sticker.name,
+                      );
+                      String msgId = await ChatController.instance().sendStickerMessage(s, message);
+                      ChatController.instance().pushStickerNotification(messageId: msgId, timeStamp: timeStamp);
+                      setState(() {});
+                    },
+                  ));
+            },
+          ),
           Expanded(
             child: SizedBox(
               width: 400,
@@ -558,6 +607,8 @@ class MessageWidgetPretty extends StatelessWidget {
           onDeleteTap: onDeleteTap,
           isReply: isReply,
         );
+      case 'sticker':
+        return StickerMessageWidget(msg: msg, onReplyTap: onReplyTap, onDeleteTap: onDeleteTap, isReply: isReply);
       default:
         return MessageWidget(
           msg: msg,
