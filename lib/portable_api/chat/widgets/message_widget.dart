@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
+import 'package:love_code/ui/helper/helper.dart';
 import 'package:love_code/ui/helper/ui_helper.dart';
 import 'package:love_code/ui/theme.dart';
 import 'package:popover/popover.dart';
@@ -15,13 +16,7 @@ class MessageWidget extends StatelessWidget {
   final Function()? onDeleteTap;
 
   const MessageWidget(
-      {super.key,
-      required this.msg,
-      this.isReply = false,
-      this.onReplyTap,
-      this.onCopyTap,
-      this.onEditTap,
-      this.onDeleteTap});
+      {super.key, required this.msg, this.isReply = false, this.onReplyTap, this.onCopyTap, this.onEditTap, this.onDeleteTap});
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +28,7 @@ class MessageWidget extends StatelessWidget {
               showPopover(
                   context: context,
                   width: 150,
-                  height: msg.senderId == Auth.instance().user.value!.uid
-                      ? 240
-                      : 128,
+                  height: msg.senderId == Auth.instance().user.value!.uid ? 240 : 128,
                   arrowHeight: 0,
                   arrowWidth: 0,
                   radius: 16,
@@ -53,8 +46,7 @@ class MessageWidget extends StatelessWidget {
                               Navigator.pop(ctx);
                             },
                           ),
-                          if (msg.senderId ==
-                              Auth.instance().user.value!.uid) ...[
+                          if (msg.senderId == Auth.instance().user.value!.uid) ...[
                             ListTile(
                               title: const Text(Localization.edit),
                               trailing: const Icon(Icons.edit),
@@ -74,8 +66,7 @@ class MessageWidget extends StatelessWidget {
                               Navigator.pop(ctx);
                             },
                           ),
-                          if (msg.senderId ==
-                              Auth.instance().user.value!.uid) ...[
+                          if (msg.senderId == Auth.instance().user.value!.uid) ...[
                             ListTile(
                               title: const Text(Localization.delete),
                               trailing: const Icon(Icons.delete),
@@ -99,14 +90,12 @@ class MessageWidget extends StatelessWidget {
           SizedBox(
             width: isReply ? screenWidth - 100 : screenWidth * 0.3,
             child: Text(
-              msg.messageType.contains('/')
-                  ? msg.message.split(' ')[1]
-                  : msg.message,
+              msg.messageType.contains('/') ? msg.message.split(' ')[1] : msg.message,
               softWrap: !isReply,
               overflow: isReply ? TextOverflow.ellipsis : null,
             ),
           ),
-          Text("${msg.timeStamp.hour}:${msg.timeStamp.minute}"),
+          Text(Helper.formatTime(msg.timeStamp)),
         ]),
       ),
     );

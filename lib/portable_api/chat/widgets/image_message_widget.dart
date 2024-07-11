@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
+import 'package:love_code/ui/helper/helper.dart';
 import 'package:love_code/ui/helper/ui_helper.dart';
 import 'package:love_code/ui/theme.dart';
 import 'package:popover/popover.dart';
@@ -13,12 +14,7 @@ class ImageMessageWidget extends StatelessWidget {
   final Function()? onReplyTap;
   final Function()? onDeleteTap;
 
-  const ImageMessageWidget(
-      {super.key,
-      required this.msg,
-      this.isReply = false,
-      this.onReplyTap,
-      this.onDeleteTap});
+  const ImageMessageWidget({super.key, required this.msg, this.isReply = false, this.onReplyTap, this.onDeleteTap});
 
   @override
   Widget build(BuildContext context) {
@@ -30,9 +26,7 @@ class ImageMessageWidget extends StatelessWidget {
               showPopover(
                   context: context,
                   width: 150,
-                  height: msg.senderId == Auth.instance().user.value!.uid
-                      ? 240
-                      : 128,
+                  height: msg.senderId == Auth.instance().user.value!.uid ? 240 : 128,
                   arrowHeight: 0,
                   arrowWidth: 0,
                   radius: 16,
@@ -50,8 +44,7 @@ class ImageMessageWidget extends StatelessWidget {
                               Navigator.pop(ctx);
                             },
                           ),
-                          if (msg.senderId ==
-                              Auth.instance().user.value!.uid) ...[
+                          if (msg.senderId == Auth.instance().user.value!.uid) ...[
                             ListTile(
                               title: const Text(Localization.delete),
                               trailing: const Icon(Icons.delete),
@@ -71,7 +64,7 @@ class ImageMessageWidget extends StatelessWidget {
         decoration: const BoxDecoration(
           color: Colors.transparent,
         ),
-        child: Row(children: [
+        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
           SizedBox(
             width: isReply ? screenWidth - 100 : screenWidth * 0.3,
             child: GestureDetector(
@@ -88,10 +81,8 @@ class ImageMessageWidget extends StatelessWidget {
                           msg.downloadUrl!,
                           width: screenWidth * 0.5,
                           height: screenWidth * 0.5,
-                          errorBuilder: (a, b, c) => SizedBox(
-                              width: screenWidth * 0.3,
-                              height: screenWidth * 0.3,
-                              child: const CircularProgressIndicator()),
+                          errorBuilder: (a, b, c) =>
+                              SizedBox(width: screenWidth * 0.3, height: screenWidth * 0.3, child: const CircularProgressIndicator()),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -100,13 +91,7 @@ class ImageMessageWidget extends StatelessWidget {
                           height: 60,
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [
-                                primaryColor,
-                                backgroundColor,
-                                backgroundColor,
-                                backgroundColor,
-                                primaryColor
-                              ],
+                              colors: [primaryColor, backgroundColor, backgroundColor, backgroundColor, primaryColor],
                               stops: [0.1, 0.2, 0.5, 0.8, 0.9],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -121,14 +106,13 @@ class ImageMessageWidget extends StatelessWidget {
                 msg.downloadUrl!,
                 width: screenWidth * 0.3,
                 height: screenWidth * 0.3,
-                errorBuilder: (a, b, c) => SizedBox(
-                    width: screenWidth * 0.3,
-                    height: screenWidth * 0.3,
-                    child: const CircularProgressIndicator()),
+                errorBuilder: (a, b, c) =>
+                    SizedBox(width: screenWidth * 0.3, height: screenWidth * 0.3, child: const CircularProgressIndicator()),
               ),
             ),
           ),
-          Text("${msg.timeStamp.hour}:${msg.timeStamp.minute}"),
+          const SizedBox(width: 4),
+          Text(Helper.formatTime(msg.timeStamp)),
         ]),
       ),
     );

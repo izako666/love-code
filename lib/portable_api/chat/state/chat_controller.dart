@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:love_code/api/command.dart';
 import 'package:love_code/constants.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/navigation/routes.dart';
@@ -29,6 +30,7 @@ class ChatController extends GetxController {
 
   static ChatController instance() => Get.find<ChatController>();
   RxList<Message> messages = RxList<Message>();
+  List<Message> referenceMessages = List.empty(growable: true);
   Rx<String> recipientId = ''.obs;
   RxList<String> stickers = RxList<String>();
   Rx<String?> chatRoom = Rx<String?>(null);
@@ -137,6 +139,15 @@ class ChatController extends GetxController {
     FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) {
       FirestoreHandler.instance().pushToken(fcmToken);
     }).onError((err) {});
+
+    FirebaseMessaging.onMessage.listen((msg) {
+      if (msg.data['effect_type'] != null) {
+        Command? command = Command.commands.firstWhereOrNull((test) => test.commandType == msg.data['effect_type']);
+        if (command != null && Get.overlayContext != null && Get.overlayContext!.mounted) {
+          command.deployEffect(Get.overlayContext!);
+        }
+      }
+    });
   }
 
   void _handleNotifOpened(RemoteMessage? msg) {
@@ -224,6 +235,16 @@ class ChatController extends GetxController {
       'user_id': recipId,
       'message_id': messageId
     });
+  }
+
+  Future<void> pushHeartsEffect() async {
+    String recipId = await FirestoreHandler.instance().getRecipientId(chatRoom.value!);
+    HttpHandler.post('/send_effect', {'effect_type': 'animation/hearts', 'user_id': recipId});
+  }
+
+  Future<void> pushBrokenHeartsEffect() async {
+    String recipId = await FirestoreHandler.instance().getRecipientId(chatRoom.value!);
+    HttpHandler.post('/send_effect', {'effect_type': 'animation/broken_hearts', 'user_id': recipId});
   }
 
   Future<void> sendAudioFile(

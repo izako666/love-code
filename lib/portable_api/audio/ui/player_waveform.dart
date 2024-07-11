@@ -15,7 +15,8 @@ class PlayerWaveform extends StatefulWidget {
       required this.height,
       required this.normalColor,
       required this.playedColor,
-      required this.maxDuration});
+      required this.maxDuration,
+      required this.isReply});
   final List<double> dbList;
   final PlayerWaveformController controller;
   final Duration maxDuration;
@@ -23,21 +24,49 @@ class PlayerWaveform extends StatefulWidget {
   final double height;
   final Color normalColor;
   final Color playedColor;
+  final bool isReply;
 
   @override
   State<PlayerWaveform> createState() => _PlayerWaveformState();
 }
 
-class _PlayerWaveformState extends State<PlayerWaveform>
-    with SingleTickerProviderStateMixin {
+class _PlayerWaveformState extends State<PlayerWaveform> with SingleTickerProviderStateMixin {
   late Ticker _ticker;
+  List<double> finalDbList = List.empty(growable: true);
   Duration oldDuration = const Duration();
   @override
   void initState() {
     widget.controller.setMaxDuration(widget.maxDuration);
     widget.controller.addListener(update);
     _ticker = createTicker(_onTick)..start();
+    finalDbList = averageChunks(widget.dbList, (widget.dbList.length / (widget.isReply ? 66 : 22)).round());
     super.initState();
+  }
+
+  List<double> averageChunks(List<double> inputList, int chunkSize) {
+    List<double> result = [];
+
+    for (int i = 0; i < inputList.length; i += chunkSize) {
+      int end = (i + chunkSize < inputList.length) ? i + chunkSize : inputList.length;
+      List<double> chunk = inputList.sublist(i, end);
+      double sum = chunk.reduce((a, b) => a + b);
+      double average = sum / chunk.length;
+      result.add(average);
+    }
+
+    return result;
+  }
+
+  List<double> scaleToMinimumZero(List<double> inputList) {
+    if (inputList.isEmpty) return [];
+
+    // Find the minimum value in the list
+    double minValue = inputList.reduce((a, b) => a < b ? a : b);
+
+    // Scale all values so that the minimum value becomes 0
+    List<double> scaledList = inputList.map((value) => value - minValue).toList();
+
+    return scaledList;
   }
 
   @override
@@ -53,18 +82,14 @@ class _PlayerWaveformState extends State<PlayerWaveform>
 
   void _onTick(Duration delta) {
     if (widget.controller.playing) {
-      Duration finalDuration =
-          widget.controller.playPosition + (delta - oldDuration);
+      Duration finalDuration = widget.controller.playPosition + (delta - oldDuration);
 
-      if (finalDuration
-              .compareTo(AudioController.instance.playbackDuration.value) >=
-          0) {
+      if (finalDuration.compareTo(AudioController.instance.playbackDuration.value) >= 0) {
         finalDuration = AudioController.instance.playbackDuration.value;
       }
       widget.controller.setPlayingPosition(finalDuration);
 
-      Get.log(
-          '${AudioController.instance.playbackPosition.value.inMilliseconds}');
+      Get.log('${AudioController.instance.playbackPosition.value.inMilliseconds}');
       if (AudioController.instance.finishedPlaying.value) {
         widget.controller.setFinishedPlaying();
       }
@@ -80,13 +105,10 @@ class _PlayerWaveformState extends State<PlayerWaveform>
         Duration maxDuration = widget.controller.maxDuration;
         double maxX = widget.width;
         double scale = dX / maxX;
-        int millisecondsNew =
-            (maxDuration.inMilliseconds.toDouble() * scale).toInt();
+        int millisecondsNew = (maxDuration.inMilliseconds.toDouble() * scale).toInt();
         Duration finalDuration = Duration(milliseconds: millisecondsNew);
         if (widget.controller.playing ||
-            (AudioController.instance.player.isPaused &&
-                AudioController.instance.currentUrl.value ==
-                    widget.controller.url)) {
+            (AudioController.instance.player.isPaused && AudioController.instance.currentUrl.value == widget.controller.url)) {
           widget.controller.setPlayingPositionAudio(finalDuration);
         }
       },
@@ -101,10 +123,8 @@ class _PlayerWaveformState extends State<PlayerWaveform>
               blendMode: BlendMode.srcIn,
               shaderCallback: (rect) {
                 double finalStop =
-                    widget.controller.playPosition.inMilliseconds.toDouble() /
-                        widget.controller.maxDuration.inMilliseconds.toDouble();
-                if (AudioController.instance.currentUrl.value !=
-                    widget.controller.url) {
+                    widget.controller.playPosition.inMilliseconds.toDouble() / widget.controller.maxDuration.inMilliseconds.toDouble();
+                if (AudioController.instance.currentUrl.value != widget.controller.url) {
                   finalStop = 0;
                 }
                 Get.log('final stoppu $finalStop');
@@ -130,10 +150,10 @@ class _PlayerWaveformState extends State<PlayerWaveform>
                 ).createShader(rect);
               },
               child: Row(
-                children: widget.dbList
+                children: finalDbList
                     .map((d) => Container(
-                          height: widget.height * pow(d, 10),
-                          width: widget.width / widget.dbList.length,
+                          height: 100.0 * pow(d, 10),
+                          width: widget.width / finalDbList.length,
                           color: Colors.white,
                         ))
                     .toList(),

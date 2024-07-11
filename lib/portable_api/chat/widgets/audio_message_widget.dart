@@ -17,12 +17,7 @@ class AudioMessageWidget extends StatefulWidget {
   final Function()? onReplyTap;
   final Function()? onDeleteTap;
 
-  const AudioMessageWidget(
-      {super.key,
-      required this.msg,
-      this.isReply = false,
-      this.onReplyTap,
-      this.onDeleteTap});
+  const AudioMessageWidget({super.key, required this.msg, this.isReply = false, this.onReplyTap, this.onDeleteTap});
 
   @override
   State<AudioMessageWidget> createState() => _AudioMessageWidgetState();
@@ -73,10 +68,7 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> {
                 showPopover(
                     context: context,
                     width: 150,
-                    height:
-                        widget.msg.senderId == Auth.instance().user.value!.uid
-                            ? 240
-                            : 128,
+                    height: widget.msg.senderId == Auth.instance().user.value!.uid ? 240 : 128,
                     arrowHeight: 0,
                     arrowWidth: 0,
                     radius: 16,
@@ -96,8 +88,7 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> {
                                 Navigator.pop(ctx);
                               },
                             ),
-                            if (widget.msg.senderId ==
-                                Auth.instance().user.value!.uid) ...[
+                            if (widget.msg.senderId == Auth.instance().user.value!.uid) ...[
                               ListTile(
                                 title: const Text(Localization.delete),
                                 trailing: const Icon(Icons.delete),
@@ -126,21 +117,23 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> {
                   children: [
                     PlayerWaveform(
                         dbList: widget.msg.waves!,
+                        isReply: widget.isReply,
                         controller: controller,
-                        width: screenWidth * 0.2,
+                        width: screenWidth * (widget.isReply ? 0.8 : 0.2),
                         height: 80,
                         normalColor: Colors.white,
                         playedColor: accentColor,
                         maxDuration: widget.msg.durationTime!),
-                    IconButton(
-                        onPressed: () {
-                          controller.setPlaying(!controller.playing);
-                          setState(() {});
-                        },
-                        icon: Consumer<PlayerWaveformController>(
-                          builder: (ctx, ctrler, _) =>
-                              Icon(playing ? Icons.pause : Icons.play_arrow),
-                        ))
+                    if (!widget.isReply) ...[
+                      IconButton(
+                          onPressed: () {
+                            controller.setPlaying(!controller.playing);
+                            setState(() {});
+                          },
+                          icon: Consumer<PlayerWaveformController>(
+                            builder: (ctx, ctrler, _) => Icon(playing ? Icons.pause : Icons.play_arrow),
+                          ))
+                    ],
                   ],
                 )),
             Text(Helper.formatTime(widget.msg.timeStamp)),

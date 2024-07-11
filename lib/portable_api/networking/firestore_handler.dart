@@ -38,23 +38,29 @@ class FirestoreHandler extends GetxController {
       'timestamp': Timestamp.fromDate(message.timeStamp),
       'sender_id': message.senderId,
       if (message.replyToRef != null) ...{
-        'reply_to_message': message.replyToRef!.message,
+        'reply_to_message': message.replyToRef!.messageId!,
         'reply_to_date': Timestamp.fromDate(message.replyToRef!.timeStamp)
       }
     });
   }
 
+  Message? getMessage(String chatId, String messageId) {
+    Message? msg =
+        ChatController.instance().referenceMessages.firstWhereOrNull((test) => test.messageId != null && test.messageId == messageId);
+    return msg;
+  }
+
   Future<List<Message>> getMessages(String chatId) async {
     QuerySnapshot<Map<String, dynamic>> snap = await db.collection(Constants.fireStoreRooms).doc(chatId).collection(Constants.msgBox).get();
 
-    return docsToMessages(snap);
+    return docsToMessages(snap, true);
   }
 
-  List<Message> docsToMessages(QuerySnapshot<Map<String, dynamic>> snap) {
+  List<Message> docsToMessages(QuerySnapshot<Map<String, dynamic>> snap, bool getReply) {
     List<Message> messages = List.empty(growable: true);
     for (int i = 0; i < snap.docs.length; i++) {
       var data = snap.docs[i].data();
-      messages.add(Message.fromData(data, snap.docs[i].id));
+      messages.add(Message.fromData(data, snap.docs[i].id, getReply));
     }
     return messages;
   }
@@ -68,7 +74,8 @@ class FirestoreHandler extends GetxController {
         .snapshots(includeMetadataChanges: true)
         .listen((d) {
       ChatController.instance().messages.clear();
-      ChatController.instance().messages.value = docsToMessages(d);
+      ChatController.instance().referenceMessages = docsToMessages(d, false);
+      ChatController.instance().messages.value = docsToMessages(d, true);
       Get.log('messages updated');
     }, onError: (a, b) {
       Get.log('message stream errored $b');
@@ -186,7 +193,7 @@ class FirestoreHandler extends GetxController {
       'timestamp': Timestamp.fromDate(message.timeStamp),
       'sender_id': message.senderId,
       if (message.replyToRef != null) ...{
-        'reply_to_message': message.replyToRef!.message,
+        'reply_to_message': message.replyToRef!.messageId!,
         'reply_to_date': Timestamp.fromDate(message.replyToRef!.timeStamp)
       },
       'message_type': 'text/draw',
@@ -208,7 +215,7 @@ class FirestoreHandler extends GetxController {
       'timestamp': Timestamp.fromDate(message.timeStamp),
       'sender_id': message.senderId,
       if (message.replyToRef != null) ...{
-        'reply_to_message': message.replyToRef!.message,
+        'reply_to_message': message.replyToRef!.messageId!,
         'reply_to_date': Timestamp.fromDate(message.replyToRef!.timeStamp)
       },
       'message_type': 'audio',
@@ -258,7 +265,7 @@ class FirestoreHandler extends GetxController {
       'timestamp': Timestamp.fromDate(message.timeStamp),
       'sender_id': message.senderId,
       if (message.replyToRef != null) ...{
-        'reply_to_message': message.replyToRef!.message,
+        'reply_to_message': message.replyToRef!.messageId!,
         'reply_to_date': Timestamp.fromDate(message.replyToRef!.timeStamp)
       },
       'message_type': 'sticker',

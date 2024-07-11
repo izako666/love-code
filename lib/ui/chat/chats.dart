@@ -64,6 +64,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    ChatController.instance().getStickers().then((val) {
+      for (String sticker in val) {
+        precacheImage(AssetImage(sticker), context);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     String currentId = Auth.instance().user.value!.uid;
     return LcScaffold(
@@ -549,9 +559,8 @@ class MessageWidgetPretty extends StatelessWidget {
                     : const BorderRadius.only(topRight: Radius.circular(16), bottomRight: Radius.circular(16))),
             child: Padding(
               padding: const EdgeInsets.only(bottom: 16.0, top: 8.0, right: 8.0, left: 8.0),
-              child: MessageWidget(
-                msg: msg.replyToRef!,
-                isReply: false,
+              child: getMessageWidget(
+                message: msg.replyToRef!,
               ),
             ),
           )
@@ -582,41 +591,42 @@ class MessageWidgetPretty extends StatelessWidget {
     );
   }
 
-  Widget getMessageWidget() {
-    switch (msg.messageType) {
+  Widget getMessageWidget({Message? message}) {
+    switch (message != null ? message.messageType : msg.messageType) {
       case 'text':
         return MessageWidget(
-          msg: msg,
+          msg: message ?? msg,
           onReplyTap: onReplyTap,
           onCopyTap: onCopyTap,
           onEditTap: onEditTap,
           onDeleteTap: onDeleteTap,
-          isReply: isReply,
+          isReply: message != null ? false : isReply,
         );
       case 'audio':
         return AudioMessageWidget(
-          msg: msg,
+          msg: message ?? msg,
           isReply: isReply,
           onReplyTap: onReplyTap,
           onDeleteTap: onDeleteTap,
         );
       case 'text/draw':
         return ImageMessageWidget(
-          msg: msg,
+          msg: message ?? msg,
           onReplyTap: onReplyTap,
           onDeleteTap: onDeleteTap,
-          isReply: isReply,
+          isReply: message != null ? false : false,
         );
       case 'sticker':
-        return StickerMessageWidget(msg: msg, onReplyTap: onReplyTap, onDeleteTap: onDeleteTap, isReply: isReply);
+        return StickerMessageWidget(
+            msg: message ?? msg, onReplyTap: onReplyTap, onDeleteTap: onDeleteTap, isReply: message != null ? false : false);
       default:
         return MessageWidget(
-          msg: msg,
+          msg: message ?? msg,
           onReplyTap: onReplyTap,
           onCopyTap: onCopyTap,
           onEditTap: onEditTap,
           onDeleteTap: onDeleteTap,
-          isReply: isReply,
+          isReply: message != null ? false : isReply,
         );
     }
   }
