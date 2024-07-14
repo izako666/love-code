@@ -4,8 +4,7 @@ class Constants {
   static const fireStoreUsers = 'users';
   static const fireStoreCodes = 'codes';
   static const apiUrl = 'https://love-code-backend.onrender.com';
-  static const googleScopes = [
-    'https://www.googleapis.com/auth/userinfo.email',
-    'https://www.googleapis.com/auth/userinfo.profile'
-  ];
+  static const googleScopes = ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile'];
+
+  static const msgWidthScale = 0.4;
 }

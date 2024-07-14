@@ -17,6 +17,7 @@ import 'package:love_code/portable_api/http/http_handler.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
 import 'package:love_code/ui/helper/helper.dart';
 import 'package:love_code/ui/theme.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 class ChatController extends GetxController {
   @override
@@ -34,6 +35,7 @@ class ChatController extends GetxController {
   Rx<String> recipientId = ''.obs;
   RxList<String> stickers = RxList<String>();
   Rx<String?> chatRoom = Rx<String?>(null);
+  Rx<AssetEntity?> selectedImage = Rx<AssetEntity?>(null);
   Rx<DocumentSnapshot<Map<String, dynamic>>?> recipientData = Rx<DocumentSnapshot<Map<String, dynamic>>?>(null);
   RxBool findingChatRoom = true.obs;
   void findChatRoom() async {
@@ -170,8 +172,10 @@ class ChatController extends GetxController {
                     msg.downloadUrl!,
                     width: screenWidth * 0.5,
                     height: screenWidth * 0.5,
-                    errorBuilder: (a, b, c) =>
-                        SizedBox(width: screenWidth * 0.3, height: screenWidth * 0.3, child: const CircularProgressIndicator()),
+                    errorBuilder: (a, b, c) => SizedBox(
+                        width: screenWidth * Constants.msgWidthScale,
+                        height: screenWidth * Constants.msgWidthScale,
+                        child: const CircularProgressIndicator()),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -280,6 +284,43 @@ class ChatController extends GetxController {
 
   Future<String> sendStickerMessage(String sticker, Message message) async {
     return await FirestoreHandler.instance().sendStickerMessage(sticker, chatRoom.value!, message);
+  }
+
+  Future<void> deleteMessage(Message msg) async {
+    switch (msg.messageType) {
+      case 'text':
+        FirestoreHandler.instance().deleteMessage(chatRoom.value!, msg);
+        break;
+      case 'text/image':
+        FirestoreHandler.instance().deleteMessage(chatRoom.value!, msg);
+        if (msg.fileName != null) {
+          FirestoreHandler.instance().storage.ref('image').child(msg.fileName!).delete();
+        }
+        break;
+      case 'text/draw':
+        FirestoreHandler.instance().deleteMessage(chatRoom.value!, msg);
+        if (msg.fileName != null) {
+          FirestoreHandler.instance().storage.ref('image').child(msg.fileName!).delete();
+        }
+        break;
+      case 'sticker':
+        FirestoreHandler.instance().deleteMessage(chatRoom.value!, msg);
+        break;
+      case 'audio':
+        FirestoreHandler.instance().deleteMessage(chatRoom.value!, msg);
+        if (msg.fileName != null) {
+          FirestoreHandler.instance().storage.ref('audio').child(msg.fileName!).delete();
+        }
+        break;
+    }
+  }
+
+  void setImage(AssetEntity? data) {
+    selectedImage.value = data;
+  }
+
+  Future<String?> uploadImage(Uint8List file, Message message) async {
+    return await FirestoreHandler.instance().sendImageMessage(file, chatRoom.value!, message);
   }
 }
 

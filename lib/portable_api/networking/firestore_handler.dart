@@ -198,12 +198,13 @@ class FirestoreHandler extends GetxController {
       },
       'message_type': 'text/draw',
       'file_url': '',
+      'file_name': '',
     });
 
     String url = await uploadImageFile(doc.id, file);
 
     await doc.update(
-      {'file_url': url},
+      {'file_url': url, 'file_name': doc.id},
     );
     return doc.id;
   }
@@ -221,7 +222,8 @@ class FirestoreHandler extends GetxController {
       'message_type': 'audio',
       'file_url': url,
       'wave_list': waves,
-      'duration_time': message.durationTime!.inMilliseconds
+      'duration_time': message.durationTime!.inMilliseconds,
+      'file_name': fileName
     });
   }
 
@@ -272,5 +274,27 @@ class FirestoreHandler extends GetxController {
       'file_url': sticker,
     }))
         .id;
+  }
+
+  Future<String?> sendImageMessage(Uint8List file, String chatId, Message message) async {
+    DocumentReference doc = await db.collection(Constants.fireStoreRooms).doc(chatId).collection(Constants.msgBox).add({
+      'message': message.message,
+      'timestamp': Timestamp.fromDate(message.timeStamp),
+      'sender_id': message.senderId,
+      if (message.replyToRef != null) ...{
+        'reply_to_message': message.replyToRef!.messageId!,
+        'reply_to_date': Timestamp.fromDate(message.replyToRef!.timeStamp)
+      },
+      'message_type': 'text/image',
+      'file_url': '',
+      'file_name': '',
+    });
+
+    String url = await uploadImageFile(doc.id, file);
+
+    await doc.update(
+      {'file_url': url, 'file_name': doc.id},
+    );
+    return doc.id;
   }
 }

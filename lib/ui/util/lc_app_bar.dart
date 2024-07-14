@@ -114,8 +114,7 @@ class LcAppBar extends StatelessWidget implements PreferredSizeWidget {
                 height: 32,
               ),
               const SizedBox(width: 8),
-              Text(Localization.appTitle,
-                  style: Theme.of(context).textTheme.headlineMedium),
+              Text(Localization.appTitle, style: Theme.of(context).textTheme.headlineMedium),
             ],
           ),
     );

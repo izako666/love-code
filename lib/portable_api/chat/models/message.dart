@@ -15,19 +15,20 @@ class Message {
   final String? downloadUrl;
   final List<double>? waves;
   final Duration? durationTime;
+  final String? fileName;
 
-  Message({
-    required this.message,
-    this.messageId,
-    this.replyToRef,
-    required this.senderId,
-    required this.timeStamp,
-    this.messageType = 'text',
-    this.file,
-    this.downloadUrl,
-    this.waves,
-    this.durationTime,
-  });
+  Message(
+      {required this.message,
+      this.messageId,
+      this.replyToRef,
+      required this.senderId,
+      required this.timeStamp,
+      this.messageType = 'text',
+      this.file,
+      this.downloadUrl,
+      this.waves,
+      this.durationTime,
+      this.fileName});
 
   Future<DocumentReference?> sendMessage(String chatId) {
     return FirestoreHandler.instance().sendMessage(chatId, this);
@@ -42,6 +43,7 @@ class Message {
     Duration? durationTime = data['duration_time'] != null ? Duration(milliseconds: data['duration_time']) : null;
     String senderId = data['sender_id'];
     DateTime timeStamp = (data['timestamp'] as Timestamp).toDate();
+    String? fileName = data['file_name'];
     // replyToRef = data['reply_to_message'] != null
     //     ? Message(
     //         message: data['reply_to_message'],
@@ -62,7 +64,8 @@ class Message {
         durationTime: durationTime,
         senderId: senderId,
         timeStamp: timeStamp,
-        replyToRef: replyToMessage);
+        replyToRef: replyToMessage,
+        fileName: fileName);
     return msg;
   }
   // Message.fromData(Map<String, dynamic> data, String id)

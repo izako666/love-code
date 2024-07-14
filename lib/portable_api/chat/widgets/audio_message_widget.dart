@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:love_code/constants.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/portable_api/audio/state_management/player_waveform_controller.dart';
 import 'package:love_code/portable_api/audio/ui/player_waveform.dart';
@@ -68,7 +69,7 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> {
                 showPopover(
                     context: context,
                     width: 150,
-                    height: widget.msg.senderId == Auth.instance().user.value!.uid ? 240 : 128,
+                    // height: widget.msg.senderId == Auth.instance().user.value!.uid ? 240 : 128,
                     arrowHeight: 0,
                     arrowWidth: 0,
                     radius: 16,
@@ -77,6 +78,7 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             ListTile(
                               title: const Text(Localization.reply),
@@ -106,20 +108,20 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> {
                     });
               },
         child: Container(
-          width: widget.isReply ? screenWidth : screenWidth * 0.4,
+          width: widget.isReply ? screenWidth : screenWidth * (Constants.msgWidthScale + 0.1),
           decoration: const BoxDecoration(
             color: Colors.transparent,
           ),
           child: Row(children: [
             SizedBox(
-                width: widget.isReply ? screenWidth - 100 : screenWidth * 0.3,
+                width: widget.isReply ? screenWidth - 100 : screenWidth * Constants.msgWidthScale,
                 child: Row(
                   children: [
                     PlayerWaveform(
                         dbList: widget.msg.waves!,
                         isReply: widget.isReply,
                         controller: controller,
-                        width: screenWidth * (widget.isReply ? 0.8 : 0.2),
+                        width: screenWidth * (widget.isReply ? 0.8 : 0.3),
                         height: 80,
                         normalColor: Colors.white,
                         playedColor: accentColor,

@@ -11,8 +11,7 @@ class ScrollableText extends StatefulWidget {
   State<ScrollableText> createState() => _ScrollableTextState();
 }
 
-class _ScrollableTextState extends State<ScrollableText>
-    with SingleTickerProviderStateMixin {
+class _ScrollableTextState extends State<ScrollableText> with SingleTickerProviderStateMixin {
   late ScrollController _scrollController;
   late Ticker _ticker;
   double _position = 0.0;
@@ -52,8 +51,9 @@ class _ScrollableTextState extends State<ScrollableText>
   Widget build(BuildContext context) {
     return SizedBox(
       width: 80,
-      height: 70,
+      height: 18,
       child: ListView.builder(
+        shrinkWrap: true,
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
         itemBuilder: (ctx, i) => Text(

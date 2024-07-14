@@ -26,11 +26,11 @@ void main() async {
   Get.put<SplashController>(SplashController());
   await initializeNotifications();
   await createNotificationChannels();
-  await setupBackgroundMessageHandler();
+  setupBackgroundMessageHandler();
   runApp(const MyApp());
 }
 
-Future<void> setupBackgroundMessageHandler() async {
+void setupBackgroundMessageHandler() {
   FirebaseMessaging.onBackgroundMessage((msg) async {
     if (msg.data['lasagna']) {}
   });

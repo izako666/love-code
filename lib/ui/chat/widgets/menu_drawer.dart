@@ -223,20 +223,6 @@ class _LcMenuDrawerState extends State<LcMenuDrawer> {
                 )),
           ),
           const SizedBox(height: 32),
-          const Padding(
-            padding: EdgeInsets.only(left: 8.0, bottom: 16),
-            child: ListTile(
-              leading: Icon(Icons.house),
-              title: Text('Example1'),
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.only(left: 8.0, bottom: 16),
-            child: ListTile(
-              leading: Icon(Icons.house),
-              title: Text('Example2'),
-            ),
-          ),
           Obx(() {
             return !Auth.instance().user.value!.emailVerified
                 ? Padding(
@@ -287,7 +273,6 @@ class _LcMenuDrawerState extends State<LcMenuDrawer> {
               },
             ),
           ),
-          const Divider(),
           Padding(
             padding: const EdgeInsets.only(left: 8.0, bottom: 16),
             child: ListTile(
@@ -361,8 +346,8 @@ class ProfilePictureWidget extends StatelessWidget {
           ),
         ),
         Positioned(
-          right: width != null ? -(width! / 8) : -12,
-          bottom: height != null ? -(height! / 8) : -12,
+          right: width != null ? -(width! / 32) : -12,
+          bottom: height != null ? -(height! / 32) : -12,
           child: (userData != null &&
                   userData!.data() != null &&
                   userData!.data()!['mood_emoji'] != null &&

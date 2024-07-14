@@ -64,16 +64,6 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    ChatController.instance().getStickers().then((val) {
-      for (String sticker in val) {
-        precacheImage(AssetImage(sticker), context);
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     String currentId = Auth.instance().user.value!.uid;
     return LcScaffold(
@@ -83,6 +73,7 @@ class _ChatScreenState extends State<ChatScreen> {
         drawer: const LcMenuDrawer(),
         appBar: LcAppBar(
             scrolledUnderElevation: 0.0,
+            toolbarHeight: 500,
             leading: IconButton(
               icon: const Icon(Icons.menu),
               onPressed: () {
@@ -107,7 +98,40 @@ class _ChatScreenState extends State<ChatScreen> {
             )),
         body: Column(
           children: [
-            const SizedBox(height: 32),
+            SizedBox(
+                height: _controller.text.startsWith('/') ? 48 : 16,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (_controller.text.startsWith('/')) ...[
+                      IconButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () {
+                            showCommandInfo = !showCommandInfo;
+                            LocalDataHandler.addData('show_command_info', showCommandInfo);
+                            setState(() {});
+                          },
+                          icon: Stack(children: [
+                            const Icon(Icons.info),
+                            !showCommandInfo
+                                ? const Icon(
+                                    Icons.close,
+                                    color: primaryColor,
+                                  )
+                                : Container(height: 16)
+                          ])),
+                      if (showCommandInfo && mostLikelyCommand != null) ...[
+                        SizedBox(
+                          width: MediaQuery.sizeOf(context).width - 150,
+                          child: ScrollableText(
+                            text: '${mostLikelyCommand!.name}:${mostLikelyCommand!.desc}',
+                            style: Theme.of(context).textTheme.bodyMedium!,
+                          ),
+                        )
+                      ]
+                    ],
+                  ],
+                )),
             Expanded(
               child: Obx(
                 () => Stack(
@@ -155,7 +179,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                         height: 35.w,
                                         text: Localization.delete,
                                         onPressed: () {
-                                          FirestoreHandler.instance().deleteMessage(ChatController.instance().chatRoom.value!, msg);
+                                          ChatController.instance().deleteMessage(msg);
                                           Navigator.pop(context);
                                         },
                                       ),
@@ -236,39 +260,6 @@ class _ChatScreenState extends State<ChatScreen> {
                                     );
                                   })))
                     ],
-                    if (_controller.text.startsWith('/')) ...[
-                      Positioned(
-                          top: 8,
-                          left: 4,
-                          child: IconButton(
-                              onPressed: () {
-                                showCommandInfo = !showCommandInfo;
-                                LocalDataHandler.addData('show_command_info', showCommandInfo);
-                                setState(() {});
-                              },
-                              icon: Stack(children: [
-                                const Icon(Icons.info),
-                                !showCommandInfo
-                                    ? const Icon(
-                                        Icons.close,
-                                        color: primaryColor,
-                                      )
-                                    : Container()
-                              ]))),
-                      if (showCommandInfo && mostLikelyCommand != null) ...[
-                        Positioned(
-                          top: 20,
-                          left: 42,
-                          child: SizedBox(
-                            width: MediaQuery.sizeOf(context).width - 150,
-                            child: ScrollableText(
-                              text: '${mostLikelyCommand!.name}:${mostLikelyCommand!.desc}',
-                              style: Theme.of(context).textTheme.bodyMedium!,
-                            ),
-                          ),
-                        )
-                      ]
-                    ],
                   ],
                 ),
               ),
@@ -321,6 +312,9 @@ class _ChatScreenState extends State<ChatScreen> {
   void _handleMessageSend() async {
     Command? chosenCommand;
     String? messageId;
+    if (_controller.text.isEmpty && ChatController.instance().selectedImage.value == null) {
+      return;
+    }
     if (_controller.text.startsWith('/')) {
       String possibleCommand = _controller.text.split('/')[1].split(' ')[0];
       for (int i = 0; i < Command.commands.length; i++) {
@@ -335,14 +329,37 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
     if (chosenCommand == null || !chosenCommand.overrideMessageSend()) {
-      messageId = (await Message(
-                  message: _controller.text,
-                  senderId: Auth.instance().user.value!.uid,
-                  replyToRef: replyMessage,
-                  timeStamp: DateTime.now(),
-                  messageType: chosenCommand != null ? chosenCommand.commandType : 'text')
-              .sendMessage(ChatController.instance().chatRoom.value!))
-          ?.id;
+      if (ChatController.instance().selectedImage.value != null && chosenCommand == null) {
+        _controller.clear();
+        replyMessage = null;
+        editMessage = null;
+        setState(() {});
+
+        Uint8List data = await (await ChatController.instance().selectedImage.value!.file)!.readAsBytes();
+        messageId = (await ChatController.instance().uploadImage(
+            data,
+            Message(
+                message: _controller.text,
+                senderId: Auth.instance().user.value!.uid,
+                replyToRef: replyMessage,
+                timeStamp: DateTime.now(),
+                messageType: chosenCommand != null ? chosenCommand.commandType : 'text/image')));
+        ChatController.instance().setImage(null);
+      } else {
+        _controller.clear();
+        replyMessage = null;
+        editMessage = null;
+        setState(() {});
+
+        messageId = (await Message(
+                    message: _controller.text,
+                    senderId: Auth.instance().user.value!.uid,
+                    replyToRef: replyMessage,
+                    timeStamp: DateTime.now(),
+                    messageType: chosenCommand != null ? chosenCommand.commandType : 'text')
+                .sendMessage(ChatController.instance().chatRoom.value!))
+            ?.id;
+      }
     }
 
     if (chosenCommand != null) {
@@ -350,10 +367,6 @@ class _ChatScreenState extends State<ChatScreen> {
     } else {
       ChatController.instance().pushNotification(message: _controller.text, messageId: messageId ?? '', timeStamp: DateTime.now());
     }
-    _controller.clear();
-    replyMessage = null;
-    editMessage = null;
-    setState(() {});
   }
 }
 
@@ -391,50 +404,87 @@ class _InputAreaState extends State<InputArea> {
     return Row(
       children: [
         if (!recording) ...[
-          IconButton(
-            icon: const Icon(Icons.image),
-            onPressed: () {
-              showIzBottomSheet(
-                  context: context,
-                  child: StickerPickerSheet(
-                    onTapNew: () {
-                      imagePickerBottomSheet(context, onImageTap: (album, img) async {
-                        Uint8List data = await (await img.file)!.readAsBytes();
-                        Uint8List? croppedImage = await showLcDialog<Uint8List?>(
-                            title: 'Crop your Image',
-                            width: 400.w,
-                            height: 0.7.sh,
-                            alignment: Alignment.topCenter,
-                            body: ImageCropper(
-                              image: data,
-                              withCircleUi: false,
-                            ));
-                        if (croppedImage != null) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            Get.back();
-                          });
+          SizedBox(
+            width: 26,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              iconSize: 26,
+              icon: const Icon(Icons.square_rounded, fill: 0, color: Colors.white),
+              onPressed: () {
+                showIzBottomSheet(
+                    context: context,
+                    child: StickerPickerSheet(
+                      onTapNew: () {
+                        imagePickerBottomSheet(context, onImageTap: (album, img) async {
+                          Uint8List data = await (await img.file)!.readAsBytes();
+                          Uint8List? croppedImage = await showLcDialog<Uint8List?>(
+                              title: 'Crop your Image',
+                              width: 400.w,
+                              height: 0.7.sh,
+                              alignment: Alignment.topCenter,
+                              body: ImageCropper(
+                                image: data,
+                                withCircleUi: false,
+                              ));
+                          if (croppedImage != null) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              Get.back();
+                            });
 
-                          await ChatController.instance().uploadSticker(croppedImage);
-                          await ChatController.instance().getStickers();
-                        }
-                      });
-                    },
-                    onTapSticker: (s) async {
-                      Get.back();
-                      DateTime timeStamp = DateTime.now();
-                      Message message = Message(
-                        message: '',
-                        senderId: Auth.instance().user.value!.uid,
-                        timeStamp: timeStamp,
-                        messageType: MESSAGETYPES.sticker.name,
-                      );
-                      String msgId = await ChatController.instance().sendStickerMessage(s, message);
-                      ChatController.instance().pushStickerNotification(messageId: msgId, timeStamp: timeStamp);
-                      setState(() {});
-                    },
-                  ));
-            },
+                            await ChatController.instance().uploadSticker(croppedImage);
+                            await ChatController.instance().getStickers();
+                          }
+                        });
+                      },
+                      onTapSticker: (s) async {
+                        Get.back();
+                        DateTime timeStamp = DateTime.now();
+                        Message message = Message(
+                          message: '',
+                          senderId: Auth.instance().user.value!.uid,
+                          timeStamp: timeStamp,
+                          messageType: MESSAGETYPES.sticker.name,
+                        );
+                        String msgId = await ChatController.instance().sendStickerMessage(s, message);
+                        ChatController.instance().pushStickerNotification(messageId: msgId, timeStamp: timeStamp);
+                        setState(() {});
+                      },
+                    ));
+              },
+            ),
           ),
+          IconButton(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              iconSize: 26,
+              icon: Obx(
+                () => Stack(children: [
+                  const Icon(Icons.image),
+                  if (ChatController.instance().selectedImage.value != null) ...{
+                    Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                            decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+                            child: const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 16,
+                            )))
+                  }
+                ]),
+              ),
+              onPressed: () {
+                imageLcPickerBottomSheet(context, onImageTap: (album, img) {
+                  ChatController.instance().setImage(img);
+                }, onSendTap: (album, image) {
+                  widget.handleMessageSend();
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Get.back();
+                  });
+                });
+              }),
           Expanded(
             child: SizedBox(
               width: 400,
@@ -453,7 +503,7 @@ class _InputAreaState extends State<InputArea> {
             child: RecordingWaveform(
                 stream: audioController.waveformData.stream.map((lDb) => lDb.last),
                 width: MediaQuery.sizeOf(context).width * 0.6,
-                height: 80,
+                height: 55,
                 color: recordingCanceled ? Colors.red : Colors.white,
                 thickness: 10),
           )
@@ -614,6 +664,14 @@ class MessageWidgetPretty extends StatelessWidget {
           msg: message ?? msg,
           onReplyTap: onReplyTap,
           onDeleteTap: onDeleteTap,
+          isReply: message != null ? false : false,
+        );
+      case 'text/image':
+        return ImageMessageWidget(
+          msg: message ?? msg,
+          onReplyTap: onReplyTap,
+          onDeleteTap: onDeleteTap,
+          large: true,
           isReply: message != null ? false : false,
         );
       case 'sticker':

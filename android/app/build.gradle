@@ -25,11 +25,13 @@ if (flutterVersionName == null) {
 android {
     namespace "com.example.love_code"
     compileSdkVersion flutter.compileSdkVersion
-    ndkVersion flutter.ndkVersion
+    ndkVersion "25.1.8937393"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled true
+
     }
 
     kotlinOptions {
@@ -67,4 +69,9 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    implementation 'androidx.cardview:cardview:1.0.0'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
+
+}
+

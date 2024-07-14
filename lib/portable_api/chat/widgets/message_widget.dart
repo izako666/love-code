@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:love_code/constants.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
@@ -28,7 +29,7 @@ class MessageWidget extends StatelessWidget {
               showPopover(
                   context: context,
                   width: 150,
-                  height: msg.senderId == Auth.instance().user.value!.uid ? 240 : 128,
+                  // height: msg.senderId == Auth.instance().user.value!.uid ? 240 : 64,
                   arrowHeight: 0,
                   arrowWidth: 0,
                   radius: 16,
@@ -37,6 +38,7 @@ class MessageWidget extends StatelessWidget {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           ListTile(
                             title: const Text(Localization.reply),
@@ -82,13 +84,13 @@ class MessageWidget extends StatelessWidget {
                   });
             },
       child: Container(
-        width: isReply ? screenWidth : screenWidth * 0.4,
+        width: isReply ? screenWidth : screenWidth * (Constants.msgWidthScale + 0.1),
         decoration: const BoxDecoration(
           color: Colors.transparent,
         ),
         child: Row(children: [
           SizedBox(
-            width: isReply ? screenWidth - 100 : screenWidth * 0.3,
+            width: isReply ? screenWidth - 100 : screenWidth * Constants.msgWidthScale,
             child: Text(
               msg.messageType.contains('/') ? msg.message.split(' ')[1] : msg.message,
               softWrap: !isReply,

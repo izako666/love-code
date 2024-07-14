@@ -1,5 +1,7 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:love_code/constants.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
@@ -13,8 +15,9 @@ class ImageMessageWidget extends StatelessWidget {
   final bool isReply;
   final Function()? onReplyTap;
   final Function()? onDeleteTap;
+  final bool large;
 
-  const ImageMessageWidget({super.key, required this.msg, this.isReply = false, this.onReplyTap, this.onDeleteTap});
+  const ImageMessageWidget({super.key, required this.msg, this.isReply = false, this.onReplyTap, this.onDeleteTap, this.large = false});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +29,7 @@ class ImageMessageWidget extends StatelessWidget {
               showPopover(
                   context: context,
                   width: 150,
-                  height: msg.senderId == Auth.instance().user.value!.uid ? 240 : 128,
+                  //height: msg.senderId == Auth.instance().user.value!.uid ? 240 : 128,
                   arrowHeight: 0,
                   arrowWidth: 0,
                   radius: 16,
@@ -35,6 +38,7 @@ class ImageMessageWidget extends StatelessWidget {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           ListTile(
                             title: const Text(Localization.reply),
@@ -60,13 +64,21 @@ class ImageMessageWidget extends StatelessWidget {
                   });
             },
       child: Container(
-        width: isReply ? screenWidth : screenWidth * 0.4,
+        width: isReply
+            ? screenWidth
+            : large
+                ? screenWidth * 0.7
+                : screenWidth * (Constants.msgWidthScale + 0.1),
         decoration: const BoxDecoration(
           color: Colors.transparent,
         ),
         child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
           SizedBox(
-            width: isReply ? screenWidth - 100 : screenWidth * 0.3,
+            width: isReply
+                ? screenWidth - 100
+                : large
+                    ? screenWidth * 0.6
+                    : screenWidth * (Constants.msgWidthScale),
             child: GestureDetector(
               onTap: () async {
                 Get.dialog(Dialog(
@@ -77,17 +89,19 @@ class ImageMessageWidget extends StatelessWidget {
                       SizedBox(
                         width: screenWidth * 0.7,
                         height: screenWidth * 0.7,
-                        child: Image.network(
-                          msg.downloadUrl!,
-                          width: screenWidth * 0.5,
-                          height: screenWidth * 0.5,
-                          errorBuilder: (a, b, c) =>
-                              SizedBox(width: screenWidth * 0.3, height: screenWidth * 0.3, child: const CircularProgressIndicator()),
+                        child: CachedNetworkImage(
+                          imageUrl: msg.downloadUrl!,
+                          width: large ? screenWidth * 0.55 : screenWidth * 0.5,
+                          height: large ? null : screenWidth * 0.55,
+                          errorWidget: (a, b, c) => SizedBox(
+                              width: large ? screenWidth * 0.55 : screenWidth * Constants.msgWidthScale,
+                              height: large ? screenWidth * 0.55 : screenWidth * Constants.msgWidthScale,
+                              child: const CircularProgressIndicator()),
                         ),
                       ),
                       const SizedBox(height: 16),
                       Container(
-                          width: screenWidth * 0.7,
+                          width: screenWidth * 0.6,
                           height: 60,
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
@@ -102,12 +116,20 @@ class ImageMessageWidget extends StatelessWidget {
                   ),
                 ));
               },
-              child: Image.network(
-                msg.downloadUrl!,
-                width: screenWidth * 0.3,
-                height: screenWidth * 0.3,
-                errorBuilder: (a, b, c) =>
-                    SizedBox(width: screenWidth * 0.3, height: screenWidth * 0.3, child: const CircularProgressIndicator()),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: msg.downloadUrl!,
+                    width: large ? screenWidth * 0.55 : screenWidth * Constants.msgWidthScale,
+                    height: large ? null : screenWidth * Constants.msgWidthScale,
+                    errorWidget: (a, b, c) => SizedBox(
+                        width: large ? screenWidth * 0.55 : screenWidth * Constants.msgWidthScale,
+                        height: large ? screenWidth * 0.55 : screenWidth * Constants.msgWidthScale,
+                        child: const Center(child: CircularProgressIndicator())),
+                  ),
+                  if (msg.message.isNotEmpty) const Positioned(right: -24, top: -5, child: Icon(Icons.chat_outlined))
+                ],
               ),
             ),
           ),

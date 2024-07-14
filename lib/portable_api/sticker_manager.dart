@@ -1,6 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:love_code/constants.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/models/message.dart';
@@ -27,13 +29,12 @@ class StickerWidget extends StatelessWidget {
         color: hintColor,
         width: 2.0,
       )),
-      child: Image.network(src,
+      child: CachedNetworkImage(
+          imageUrl: src,
           width: width,
           height: height,
-          errorBuilder: (a, b, c) => SizedBox(
-              width: MediaQuery.of(context).size.width * 0.3,
-              height: MediaQuery.of(context).size.width * 0.3,
-              child: const CircularProgressIndicator())),
+          placeholder: (a, b) => SizedBox(width: width, height: height, child: const Center(child: CircularProgressIndicator())),
+          errorWidget: (a, b, c) => SizedBox(width: width, height: height, child: const Center(child: CircularProgressIndicator()))),
     );
   }
 }
@@ -56,7 +57,7 @@ class StickerMessageWidget extends StatelessWidget {
               showPopover(
                   context: context,
                   width: 150,
-                  height: msg.senderId == Auth.instance().user.value!.uid ? 240 : 128,
+                  //height: msg.senderId == Auth.instance().user.value!.uid ? 240 : 128,
                   arrowHeight: 0,
                   arrowWidth: 0,
                   radius: 16,
@@ -65,6 +66,7 @@ class StickerMessageWidget extends StatelessWidget {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           ListTile(
                             title: const Text(Localization.reply),
@@ -90,17 +92,17 @@ class StickerMessageWidget extends StatelessWidget {
                   });
             },
       child: Container(
-        width: isReply ? screenWidth : screenWidth * 0.4,
+        width: isReply ? screenWidth : screenWidth * (Constants.msgWidthScale + 0.1),
         decoration: const BoxDecoration(
           color: Colors.transparent,
         ),
         child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
           SizedBox(
-            width: isReply ? screenWidth - 100 : screenWidth * 0.3,
+            width: isReply ? screenWidth - 100 : screenWidth * Constants.msgWidthScale,
             child: StickerWidget(
               src: msg.downloadUrl!,
-              width: screenWidth * 0.3,
-              height: screenWidth * 0.3,
+              width: screenWidth * Constants.msgWidthScale,
+              height: screenWidth * Constants.msgWidthScale,
             ),
           ),
           const SizedBox(width: 4),
