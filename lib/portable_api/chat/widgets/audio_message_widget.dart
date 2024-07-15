@@ -108,11 +108,11 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> {
                     });
               },
         child: Container(
-          width: widget.isReply ? screenWidth : screenWidth * (Constants.msgWidthScale + 0.1),
+          width: widget.isReply ? screenWidth : null,
           decoration: const BoxDecoration(
             color: Colors.transparent,
           ),
-          child: Row(children: [
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
             SizedBox(
                 width: widget.isReply ? screenWidth - 100 : screenWidth * Constants.msgWidthScale,
                 child: Row(
@@ -121,20 +121,23 @@ class _AudioMessageWidgetState extends State<AudioMessageWidget> {
                         dbList: widget.msg.waves!,
                         isReply: widget.isReply,
                         controller: controller,
-                        width: screenWidth * (widget.isReply ? 0.8 : 0.3),
+                        width: screenWidth * (widget.isReply ? 0.8 : (Constants.msgWidthScale - 0.1)),
                         height: 80,
                         normalColor: Colors.white,
                         playedColor: accentColor,
                         maxDuration: widget.msg.durationTime!),
                     if (!widget.isReply) ...[
-                      IconButton(
-                          onPressed: () {
-                            controller.setPlaying(!controller.playing);
-                            setState(() {});
-                          },
-                          icon: Consumer<PlayerWaveformController>(
-                            builder: (ctx, ctrler, _) => Icon(playing ? Icons.pause : Icons.play_arrow),
-                          ))
+                      SizedBox(
+                        width: screenWidth * 0.04,
+                        child: IconButton(
+                            onPressed: () {
+                              controller.setPlaying(!controller.playing);
+                              setState(() {});
+                            },
+                            icon: Consumer<PlayerWaveformController>(
+                              builder: (ctx, ctrler, _) => Icon(playing ? Icons.pause : Icons.play_arrow),
+                            )),
+                      )
                     ],
                   ],
                 )),

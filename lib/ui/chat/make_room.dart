@@ -42,32 +42,27 @@ class _MakeRoomScreenState extends State<MakeRoomScreen> {
     if (Auth.instance().queueVerify.value) {
       Auth.instance().queueVerify.value = false;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showLcDialog(
-            title: Localization.plsVerifyEmail,
-            desc: Localization.needToConfirmYou,
-            actions: [
-              LcButton(
-                width: 75.w,
-                height: 35.w,
-                text: Localization.verify,
-                onPressed: () async {
-                  Auth.instance().sendEmailVerification().whenComplete(() {
-                    Get.snackbar(
-                        Localization.success, Localization.emailVerifySent,
-                        snackPosition: SnackPosition.BOTTOM);
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              LcButton(
-                width: 75.w,
-                height: 35.w,
-                text: Localization.later,
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              )
-            ]);
+        showLcDialog(title: Localization.plsVerifyEmail, desc: Localization.needToConfirmYou, actions: [
+          LcButton(
+            width: 75.w,
+            height: 35.w,
+            text: Localization.verify,
+            onPressed: () async {
+              Auth.instance().sendEmailVerification().whenComplete(() {
+                Get.snackbar(Localization.success, Localization.emailVerifySent, snackPosition: SnackPosition.BOTTOM);
+              });
+              Navigator.pop(context);
+            },
+          ),
+          LcButton(
+            width: 75.w,
+            height: 35.w,
+            text: Localization.later,
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          )
+        ]);
       });
     }
     ChatController.instance().hookInChatroomCheck();
@@ -79,40 +74,35 @@ class _MakeRoomScreenState extends State<MakeRoomScreen> {
     _controller6 = TextEditingController();
     _node1 = FocusNode();
     _node2 = FocusNode(onKeyEvent: (node, event) {
-      if (event is KeyUpEvent &&
-          event.logicalKey == LogicalKeyboardKey.backspace) {
+      if (event is KeyUpEvent && event.logicalKey == LogicalKeyboardKey.backspace) {
         _node1.requestFocus();
         return KeyEventResult.handled;
       }
       return KeyEventResult.handled;
     });
     _node3 = FocusNode(onKeyEvent: (node, event) {
-      if (event is KeyUpEvent &&
-          event.logicalKey == LogicalKeyboardKey.backspace) {
+      if (event is KeyUpEvent && event.logicalKey == LogicalKeyboardKey.backspace) {
         _node2.requestFocus();
         return KeyEventResult.handled;
       }
       return KeyEventResult.handled;
     });
     _node4 = FocusNode(onKeyEvent: (node, event) {
-      if (event is KeyUpEvent &&
-          event.logicalKey == LogicalKeyboardKey.backspace) {
+      if (event is KeyUpEvent && event.logicalKey == LogicalKeyboardKey.backspace) {
         _node3.requestFocus();
         return KeyEventResult.handled;
       }
       return KeyEventResult.handled;
     });
     _node5 = FocusNode(onKeyEvent: (node, event) {
-      if (event is KeyUpEvent &&
-          event.logicalKey == LogicalKeyboardKey.backspace) {
+      if (event is KeyUpEvent && event.logicalKey == LogicalKeyboardKey.backspace) {
         _node4.requestFocus();
         return KeyEventResult.handled;
       }
       return KeyEventResult.handled;
     });
     _node6 = FocusNode(onKeyEvent: (node, event) {
-      if (event is KeyUpEvent &&
-          event.logicalKey == LogicalKeyboardKey.backspace) {
+      if (event is KeyUpEvent && event.logicalKey == LogicalKeyboardKey.backspace) {
         _node5.requestFocus();
         return KeyEventResult.handled;
       }
@@ -120,47 +110,40 @@ class _MakeRoomScreenState extends State<MakeRoomScreen> {
     });
 
     _controller1.addListener(() {
-      if (_controller1.value.text.isNotEmpty &&
-          myKeys[0] != _controller1.text) {
+      if (_controller1.value.text.isNotEmpty && myKeys[0] != _controller1.text) {
         myKeys[0] = _controller1.text;
 
         _node2.requestFocus();
       }
     });
     _controller2.addListener(() {
-      if (_controller2.value.text.isNotEmpty &&
-          myKeys[1] != _controller2.text) {
+      if (_controller2.value.text.isNotEmpty && myKeys[1] != _controller2.text) {
         myKeys[1] = _controller2.text;
         _node3.requestFocus();
       }
     });
     _controller3.addListener(() {
-      if (_controller3.value.text.isNotEmpty &&
-          myKeys[2] != _controller3.text) {
+      if (_controller3.value.text.isNotEmpty && myKeys[2] != _controller3.text) {
         myKeys[2] = _controller3.text;
 
         _node4.requestFocus();
       }
     });
     _controller4.addListener(() {
-      if (_controller4.value.text.isNotEmpty &&
-          myKeys[3] != _controller4.text) {
+      if (_controller4.value.text.isNotEmpty && myKeys[3] != _controller4.text) {
         myKeys[3] = _controller4.text;
 
         _node5.requestFocus();
       }
     });
     _controller5.addListener(() {
-      if (_controller5.value.text.isNotEmpty &&
-          myKeys[4] != _controller5.text) {
+      if (_controller5.value.text.isNotEmpty && myKeys[4] != _controller5.text) {
         myKeys[4] = _controller5.text;
         _node6.requestFocus();
       }
     });
     _controller6.addListener(() {
-      if (_controller2.value.text.isNotEmpty &&
-          checkControllerFull() &&
-          myKeys[5] != _controller6.text) {
+      if (_controller2.value.text.isNotEmpty && checkControllerFull() && myKeys[5] != _controller6.text) {
         myKeys[5] = _controller6.text;
         ChatController.instance().confirmRoomCode(combineControllerTexts());
       }
@@ -198,100 +181,93 @@ class _MakeRoomScreenState extends State<MakeRoomScreen> {
             _key.currentState!.openDrawer();
           },
         ),
-        title: Text(Localization.makeRoom,
-            style: Theme.of(context).textTheme.headlineLarge!),
+        title: Text(Localization.makeRoom, style: Theme.of(context).textTheme.headlineLarge!),
       ),
-      body: SingleChildScrollView(
-        physics: const NeverScrollableScrollPhysics(),
-        child: Column(
-          children: [
-            const SizedBox(height: kToolbarHeight * 2),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                OTPTextField(
-                  controller: _controller1,
-                  node: _node1,
-                  onPaste: onPaste,
-                ),
-                OTPTextField(
-                  controller: _controller2,
-                  node: _node2,
-                  onPaste: onPaste,
-                ),
-                OTPTextField(
-                  controller: _controller3,
-                  node: _node3,
-                  onPaste: onPaste,
-                ),
-                OTPTextField(
-                  controller: _controller4,
-                  node: _node4,
-                  onPaste: onPaste,
-                ),
-                OTPTextField(
-                  controller: _controller5,
-                  node: _node5,
-                  onPaste: onPaste,
-                ),
-                OTPTextField(
-                  controller: _controller6,
-                  node: _node6,
-                  onPaste: onPaste,
-                ),
-              ],
-            ),
-            SizedBox(height: 0.2.sh),
-            LcButton(
-              text: Localization.confirmRoomCode,
-              onPressed: () {
-                if (checkControllerFull()) {
-                  ChatController.instance()
-                      .confirmRoomCode(combineControllerTexts());
-                } else {
-                  Get.snackbar(Localization.oops, Localization.fillAllFields);
-                }
-              },
-            ),
-            TextButton(
-              onPressed: () async {
-                try {
-                  roomCode = await ChatController.instance().createRoomCode();
-                  setState(() {});
-                } catch (e) {
-                  Get.snackbar(Localization.oops, Localization.smthnBad);
-                }
-              },
-              child: Text(
-                Localization.createRoomCode,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall!
-                    .copyWith(color: hintColor),
-              ),
-            ),
-            if (roomCode != null) ...[
+      body: Center(
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: kToolbarHeight * 2),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SelectableText(roomCode!,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyLarge!
-                          .copyWith(fontSize: 20)),
-                  IconButton(
-                    icon: const Icon(Icons.copy),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: roomCode!));
-                      Get.snackbar(
-                          Localization.success, Localization.copiedToClipboard,
-                          snackPosition: SnackPosition.BOTTOM);
-                    },
-                  )
+                  OTPTextField(
+                    controller: _controller1,
+                    node: _node1,
+                    onPaste: onPaste,
+                  ),
+                  OTPTextField(
+                    controller: _controller2,
+                    node: _node2,
+                    onPaste: onPaste,
+                  ),
+                  OTPTextField(
+                    controller: _controller3,
+                    node: _node3,
+                    onPaste: onPaste,
+                  ),
+                  OTPTextField(
+                    controller: _controller4,
+                    node: _node4,
+                    onPaste: onPaste,
+                  ),
+                  OTPTextField(
+                    controller: _controller5,
+                    node: _node5,
+                    onPaste: onPaste,
+                  ),
+                  OTPTextField(
+                    controller: _controller6,
+                    node: _node6,
+                    onPaste: onPaste,
+                  ),
                 ],
-              )
-            ]
-          ],
+              ),
+              SizedBox(height: 0.2.sh),
+              LcButton(
+                text: Localization.confirmRoomCode,
+                onPressed: () {
+                  if (checkControllerFull()) {
+                    ChatController.instance().confirmRoomCode(combineControllerTexts());
+                  } else {
+                    Get.snackbar(Localization.oops, Localization.fillAllFields);
+                  }
+                },
+              ),
+              TextButton(
+                onPressed: () async {
+                  try {
+                    roomCode = await ChatController.instance().createRoomCode();
+                    setState(() {});
+                  } catch (e) {
+                    Get.snackbar(Localization.oops, Localization.smthnBad);
+                  }
+                },
+                child: Text(
+                  Localization.createRoomCode,
+                  style: Theme.of(context).textTheme.bodySmall!.copyWith(color: hintColor),
+                ),
+              ),
+              if (roomCode != null) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SelectableText(roomCode!, style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 20)),
+                    IconButton(
+                      icon: const Icon(Icons.copy),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: roomCode!));
+                        Get.snackbar(Localization.success, Localization.copiedToClipboard, snackPosition: SnackPosition.BOTTOM);
+                      },
+                    )
+                  ],
+                )
+              ]
+            ],
+          ),
         ),
       ),
     );
@@ -345,26 +321,19 @@ class OTPTextField extends StatelessWidget {
         child: Align(
           alignment: Alignment.center,
           child: TextField(
-            contextMenuBuilder:
-                (BuildContext context, EditableTextState editableTextState) {
+            contextMenuBuilder: (BuildContext context, EditableTextState editableTextState) {
               return AdaptiveTextSelectionToolbar(
                   anchors: editableTextState.contextMenuAnchors,
                   // Build the default buttons, but make them look custom.
                   // In a real project you may want to build different
                   // buttons depending on the platform.
-                  children: editableTextState.contextMenuButtonItems
-                      .map((ContextMenuButtonItem buttonItem) {
+                  children: editableTextState.contextMenuButtonItems.map((ContextMenuButtonItem buttonItem) {
                     return CupertinoButton(
                       borderRadius: null,
                       onPressed: () async {
-                        String label =
-                            CupertinoTextSelectionToolbarButton.getButtonLabel(
-                                context, buttonItem);
-                        ClipboardData? data =
-                            await Clipboard.getData('text/plain');
-                        if (label == 'Paste' &&
-                            data != null &&
-                            data.text!.length >= 6) {
+                        String label = CupertinoTextSelectionToolbarButton.getButtonLabel(context, buttonItem);
+                        ClipboardData? data = await Clipboard.getData('text/plain');
+                        if (label == 'Paste' && data != null && data.text!.length >= 6) {
                           onPaste(data.text!);
                         } else {
                           if (buttonItem.onPressed != null) {
@@ -377,8 +346,7 @@ class OTPTextField extends StatelessWidget {
                       child: SizedBox(
                         width: 50.0,
                         child: Text(
-                          CupertinoTextSelectionToolbarButton.getButtonLabel(
-                              context, buttonItem),
+                          CupertinoTextSelectionToolbarButton.getButtonLabel(context, buttonItem),
                         ),
                       ),
                     );

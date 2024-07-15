@@ -57,4 +57,7 @@ class Localization {
 
   static const send = 'Send';
   static const clear = 'Clear';
+
+  static const addSticker = 'Add a new sticker';
+  static const noImages = 'You have no Images';
 }

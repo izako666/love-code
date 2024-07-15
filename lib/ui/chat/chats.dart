@@ -19,6 +19,7 @@ import 'package:love_code/portable_api/networking/firestore_handler.dart';
 import 'package:love_code/portable_api/sticker_manager.dart';
 import 'package:love_code/portable_api/ui/bottom_sheet.dart';
 import 'package:love_code/portable_api/ui/image_worker.dart';
+import 'package:love_code/portable_api/ui/swipe_reply.dart';
 import 'package:love_code/ui/chat/widgets/menu_drawer.dart';
 import 'package:love_code/ui/helper/scrollable_text.dart';
 import 'package:love_code/ui/helper/ui_helper.dart';
@@ -27,6 +28,7 @@ import 'package:love_code/ui/util/lc_app_bar.dart';
 import 'package:love_code/ui/util/lc_button.dart';
 import 'package:love_code/ui/util/lc_dialog.dart';
 import 'package:love_code/ui/util/lc_scaffold.dart';
+import 'package:photo_manager/photo_manager.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -65,6 +67,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (Auth.instance().user.value == null) {
+      return Container();
+    }
     String currentId = Auth.instance().user.value!.uid;
     return LcScaffold(
         scaffoldKey: _key,
@@ -74,6 +79,7 @@ class _ChatScreenState extends State<ChatScreen> {
         appBar: LcAppBar(
             scrolledUnderElevation: 0.0,
             toolbarHeight: 500,
+            titleSpacing: 0.0,
             leading: IconButton(
               icon: const Icon(Icons.menu),
               onPressed: () {
@@ -82,19 +88,23 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
             title: Obx(
-              () => Row(children: [
-                ProfilePictureWidget(userId: ChatController.instance().recipientId.value, width: 30.w, height: 30.w),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(ChatController.instance().recipientData.value?.data()?['userName'] ?? '',
-                        style: Theme.of(context).textTheme.bodyMedium),
-                    Text(ChatController.instance().recipientData.value?.data()?['mood_message'] ?? '',
-                        style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                )
-              ]),
+              () {
+                return !Get.isRegistered<ChatController>()
+                    ? Container()
+                    : Row(children: [
+                        ProfilePictureWidget(userId: ChatController.instance().recipientId.value, width: 30.w, height: 30.w),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(ChatController.instance().recipientData.value?.data()?['userName'] ?? '',
+                                style: Theme.of(context).textTheme.bodyMedium),
+                            Text(ChatController.instance().recipientData.value?.data()?['mood_message'] ?? '',
+                                style: Theme.of(context).textTheme.bodySmall),
+                          ],
+                        )
+                      ]);
+              },
             )),
         body: Column(
           children: [
@@ -142,60 +152,51 @@ class _ChatScreenState extends State<ChatScreen> {
                         shrinkWrap: true,
                         itemBuilder: (context, index) {
                           Message msg = chatController.messages[chatController.messages.length - (index + 1)];
-                          return Align(
-                              alignment: msg.senderId != currentId ? Alignment.centerRight : Alignment.centerLeft,
-                              child: Dismissible(
-                                key: GlobalKey(),
-                                direction: msg.senderId != currentId ? DismissDirection.endToStart : DismissDirection.startToEnd,
-                                dismissThresholds: const {DismissDirection.endToStart: 0.2, DismissDirection.startToEnd: 0.2},
-                                confirmDismiss: (d) async {
-                                  replyMessage = msg;
-                                  editMessage = null;
-                                  setState(() {});
-                                  return false;
-                                },
-                                child: MessageWidgetPretty(
-                                  msg: msg,
-                                  currentId: currentId,
-                                  right: msg.senderId != currentId,
-                                  onReplyTap: () {
-                                    replyMessage = msg;
-                                    editMessage = null;
-                                    setState(() {});
-                                  },
-                                  onCopyTap: () async {
-                                    await Clipboard.setData(ClipboardData(text: msg.message));
-                                  },
-                                  onEditTap: () {
-                                    _controller.value = TextEditingValue(text: msg.message);
-                                    editMessage = msg;
-                                    replyMessage = null;
-                                    setState(() {});
-                                  },
-                                  onDeleteTap: () {
-                                    showLcDialog(title: Localization.deleteMessage, desc: Localization.confirmDecision, actions: [
-                                      LcButton(
-                                        width: 75.w,
-                                        height: 35.w,
-                                        text: Localization.delete,
-                                        onPressed: () {
-                                          ChatController.instance().deleteMessage(msg);
-                                          Navigator.pop(context);
-                                        },
-                                      ),
-                                      const SizedBox(width: 16),
-                                      LcButton(
-                                        width: 75.w,
-                                        height: 35.w,
-                                        text: Localization.cancel,
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                      )
-                                    ]);
+                          return AlignedMessageWidget(
+                            msg: msg,
+                            currentId: currentId,
+                            onDismiss: () {
+                              replyMessage = msg;
+                              editMessage = null;
+                              setState(() {});
+                            },
+                            onCopyTap: () async {
+                              await Clipboard.setData(ClipboardData(text: msg.message));
+                            },
+                            onEditTap: () {
+                              _controller.value = TextEditingValue(text: msg.message);
+                              editMessage = msg;
+                              replyMessage = null;
+                              setState(() {});
+                            },
+                            onDeleteTap: () {
+                              showLcDialog(title: Localization.deleteMessage, desc: Localization.confirmDecision, actions: [
+                                LcButton(
+                                  width: 75.w,
+                                  height: 35.w,
+                                  text: Localization.delete,
+                                  onPressed: () {
+                                    ChatController.instance().deleteMessage(msg);
+                                    Navigator.pop(context);
                                   },
                                 ),
-                              ));
+                                const SizedBox(width: 16),
+                                LcButton(
+                                  width: 75.w,
+                                  height: 35.w,
+                                  text: Localization.cancel,
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                )
+                              ]);
+                            },
+                            onReplyTap: () {
+                              replyMessage = msg;
+                              editMessage = null;
+                              setState(() {});
+                            },
+                          );
                         }),
                     if ((replyMessage != null || editMessage != null) && !_controller.text.startsWith('/')) ...[
                       Positioned(
@@ -330,35 +331,40 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     if (chosenCommand == null || !chosenCommand.overrideMessageSend()) {
       if (ChatController.instance().selectedImage.value != null && chosenCommand == null) {
+        String sendText = _controller.text;
         _controller.clear();
-        replyMessage = null;
-        editMessage = null;
+
         setState(() {});
 
         Uint8List data = await (await ChatController.instance().selectedImage.value!.file)!.readAsBytes();
         messageId = (await ChatController.instance().uploadImage(
             data,
             Message(
-                message: _controller.text,
+                message: sendText,
                 senderId: Auth.instance().user.value!.uid,
                 replyToRef: replyMessage,
                 timeStamp: DateTime.now(),
                 messageType: chosenCommand != null ? chosenCommand.commandType : 'text/image')));
         ChatController.instance().setImage(null);
-      } else {
-        _controller.clear();
         replyMessage = null;
         editMessage = null;
         setState(() {});
+      } else {
+        String sendText = _controller.text;
+        _controller.clear();
+        setState(() {});
 
         messageId = (await Message(
-                    message: _controller.text,
+                    message: sendText,
                     senderId: Auth.instance().user.value!.uid,
                     replyToRef: replyMessage,
                     timeStamp: DateTime.now(),
                     messageType: chosenCommand != null ? chosenCommand.commandType : 'text')
                 .sendMessage(ChatController.instance().chatRoom.value!))
             ?.id;
+        replyMessage = null;
+        editMessage = null;
+        setState(() {});
       }
     }
 
@@ -415,7 +421,22 @@ class _InputAreaState extends State<InputArea> {
                 showIzBottomSheet(
                     context: context,
                     child: StickerPickerSheet(
-                      onTapNew: () {
+                      onTapNew: () async {
+                        final PermissionState ps =
+                            await PhotoManager.requestPermissionExtend(); // the method can use optional param `permission`.
+                        if (ps.isAuth) {
+                          // Granted
+                          // You can to get assets here.
+                        } else if (ps.hasAccess) {
+                          // Access will continue, but the amount visible depends on the user's selection.
+                        } else {
+                          return;
+                          // Limited(iOS) or Rejected, use `==` for more precise judgements.
+                          // You can call `PhotoManager.openSetting()` to open settings for further steps.
+                        }
+                        if (!context.mounted) {
+                          return;
+                        }
                         imagePickerBottomSheet(context, onImageTap: (album, img) async {
                           Uint8List data = await (await img.file)!.readAsBytes();
                           Uint8List? croppedImage = await showLcDialog<Uint8List?>(
@@ -475,7 +496,21 @@ class _InputAreaState extends State<InputArea> {
                   }
                 ]),
               ),
-              onPressed: () {
+              onPressed: () async {
+                final PermissionState ps = await PhotoManager.requestPermissionExtend(); // the method can use optional param `permission`.
+                if (ps.isAuth) {
+                  // Granted
+                  // You can to get assets here.
+                } else if (ps.hasAccess) {
+                  // Access will continue, but the amount visible depends on the user's selection.
+                } else {
+                  return;
+                  // Limited(iOS) or Rejected, use `==` for more precise judgements.
+                  // You can call `PhotoManager.openSetting()` to open settings for further steps.
+                }
+                if (!context.mounted) {
+                  return;
+                }
                 imageLcPickerBottomSheet(context, onImageTap: (album, img) {
                   ChatController.instance().setImage(img);
                 }, onSendTap: (album, image) {
@@ -569,6 +604,55 @@ class _InputAreaState extends State<InputArea> {
           },
         ),
       ],
+    );
+  }
+}
+
+class AlignedMessageWidget extends StatefulWidget {
+  const AlignedMessageWidget(
+      {super.key,
+      required this.msg,
+      required this.currentId,
+      required this.onDismiss,
+      required this.onCopyTap,
+      required this.onEditTap,
+      required this.onDeleteTap,
+      required this.onReplyTap});
+  final Message msg;
+  final String currentId;
+  final Function() onDismiss;
+  final Function() onCopyTap;
+  final Function() onEditTap;
+  final Function() onDeleteTap;
+  final Function() onReplyTap;
+
+  @override
+  State<AlignedMessageWidget> createState() => _AlignedMessageWidgetState();
+}
+
+class _AlignedMessageWidgetState extends State<AlignedMessageWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return SwipeReply(
+      // direction: widget.msg.senderId != widget.currentId ? DismissDirection.endToStart : DismissDirection.startToEnd,
+      // dismissThresholds: const {DismissDirection.endToStart: 0.2, DismissDirection.startToEnd: 0.2},
+      // onDismissed: (d) {
+      //   Get.log('on dismissed');
+      // },
+      onReply: widget.onDismiss,
+      left: widget.msg.senderId == widget.currentId,
+      child: Align(
+        alignment: widget.msg.senderId != widget.currentId ? Alignment.centerRight : Alignment.centerLeft,
+        child: MessageWidgetPretty(
+          msg: widget.msg,
+          currentId: widget.currentId,
+          right: widget.msg.senderId != widget.currentId,
+          onReplyTap: widget.onReplyTap,
+          onCopyTap: widget.onReplyTap,
+          onEditTap: widget.onEditTap,
+          onDeleteTap: widget.onDeleteTap,
+        ),
+      ),
     );
   }
 }

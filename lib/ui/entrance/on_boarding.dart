@@ -4,6 +4,8 @@ import 'package:get/route_manager.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/navigation/routes.dart';
 import 'package:love_code/portable_api/local_data/local_data.dart';
+import 'package:love_code/resources.dart';
+import 'package:love_code/ui/theme.dart';
 import 'package:love_code/ui/util/lc_app_bar.dart';
 import 'package:love_code/ui/util/lc_button.dart';
 import 'package:love_code/ui/util/lc_scaffold.dart';
@@ -22,18 +24,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   late int selectedPage;
   late final PageController _pageController;
   @override
+  void didChangeDependencies() {
+    precacheImage(const AssetImage(Resources.onboarding_1), context);
+    precacheImage(const AssetImage(Resources.onboarding_2), context);
+    precacheImage(const AssetImage(Resources.onboarding_3), context);
+
+    images = [
+      Image.asset(Resources.onboarding_1, width: 0.8.sw, height: 0.4.sh),
+      Image.asset(Resources.onboarding_2, width: 0.8.sw, height: 0.4.sh),
+      Image.asset(Resources.onboarding_3, width: 0.8.sw, height: 0.4.sh),
+    ];
+    super.didChangeDependencies();
+  }
+
+  @override
   void initState() {
     super.initState();
-    images = [
-      Container(color: Colors.red, width: 0.8.sw, height: 0.4.sh),
-      Container(color: Colors.red, width: 0.8.sw, height: 0.4.sh),
-      Container(color: Colors.red, width: 0.8.sw, height: 0.4.sh),
-    ];
-    text = const [
-      Text(Localization.onboarding_1),
-      Text(Localization.onboarding_2),
-      Text(Localization.onboarding_3)
-    ];
+
+    text = const [Text(Localization.onboarding_1), Text(Localization.onboarding_2), Text(Localization.onboarding_3)];
     selectedPage = 0;
     _pageController = PageController(initialPage: selectedPage);
   }
@@ -56,13 +64,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               return Column(
                 children: [
                   const SizedBox(height: kToolbarHeight * 2),
-                  images[index],
+                  Container(decoration: BoxDecoration(border: Border.all(color: accentColor)), child: images[index]),
                   const SizedBox(
                     height: 32,
                   ),
-                  Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 64),
-                      child: text[index]),
+                  Padding(padding: const EdgeInsets.symmetric(horizontal: 64), child: text[index]),
                   const SizedBox(
                     height: 16,
                   ),

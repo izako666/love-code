@@ -73,10 +73,12 @@ class FirestoreHandler extends GetxController {
         .orderBy('timestamp')
         .snapshots(includeMetadataChanges: true)
         .listen((d) {
-      ChatController.instance().messages.clear();
-      ChatController.instance().referenceMessages = docsToMessages(d, false);
-      ChatController.instance().messages.value = docsToMessages(d, true);
-      Get.log('messages updated');
+      try {
+        ChatController.instance().messages.clear();
+        ChatController.instance().referenceMessages = docsToMessages(d, false);
+        ChatController.instance().messages.value = docsToMessages(d, true);
+        Get.log('messages updated');
+      } catch (e) {}
     }, onError: (a, b) {
       Get.log('message stream errored $b');
     }, onDone: () {

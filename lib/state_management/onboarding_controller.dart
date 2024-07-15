@@ -6,8 +6,7 @@ class OnboardingController extends GetxController {
   RxBool seenOnboarding = false.obs;
   @override
   void onInit() {
-    seenOnboarding.value =
-        LocalDataHandler.readData<bool>('on_boarding', false);
+    seenOnboarding.value = LocalDataHandler.readData<bool>('on_boarding', false);
 
     super.onInit();
   }

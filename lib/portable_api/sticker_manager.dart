@@ -92,11 +92,11 @@ class StickerMessageWidget extends StatelessWidget {
                   });
             },
       child: Container(
-        width: isReply ? screenWidth : screenWidth * (Constants.msgWidthScale + 0.1),
+        width: isReply ? screenWidth : null,
         decoration: const BoxDecoration(
           color: Colors.transparent,
         ),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.end, children: [
           SizedBox(
             width: isReply ? screenWidth - 100 : screenWidth * Constants.msgWidthScale,
             child: StickerWidget(
@@ -157,11 +157,16 @@ class _StickerPickerSheetState extends State<StickerPickerSheet> {
                         child: SizedBox(
                           width: 120.w,
                           height: 120.w,
-                          child: const Align(
+                          child: Align(
                             alignment: Alignment.center,
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: [Icon(Icons.image), SizedBox(height: 10), Text('Add a new sticker')],
+                              children: [
+                                const Icon(Icons.image),
+                                const SizedBox(height: 10),
+                                Text(Localization.addSticker,
+                                    style: Theme.of(context).textTheme.bodySmall!.copyWith(color: Colors.white, fontSize: 12.spMin))
+                              ],
                             ),
                           ),
                         ),

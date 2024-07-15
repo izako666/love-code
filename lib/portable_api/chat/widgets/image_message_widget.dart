@@ -67,12 +67,12 @@ class ImageMessageWidget extends StatelessWidget {
         width: isReply
             ? screenWidth
             : large
-                ? screenWidth * 0.7
-                : screenWidth * (Constants.msgWidthScale + 0.1),
+                ? null
+                : null,
         decoration: const BoxDecoration(
           color: Colors.transparent,
         ),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+        child: Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.end, children: [
           SizedBox(
             width: isReply
                 ? screenWidth - 100

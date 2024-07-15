@@ -60,6 +60,7 @@ dependencies:
   crop_your_image: ^1.1.0
   photo_manager_image_provider: ^2.1.1
   cached_network_image: ^3.3.1
+  swipe_to: ^1.0.6
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -90,6 +91,7 @@ flutter:
   assets:
     - assets/logos/
     - assets/smileys-and-faces/
+    - assets/screenshots/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 

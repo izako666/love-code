@@ -84,11 +84,11 @@ class MessageWidget extends StatelessWidget {
                   });
             },
       child: Container(
-        width: isReply ? screenWidth : screenWidth * (Constants.msgWidthScale + 0.1),
+        width: isReply ? screenWidth : null,
         decoration: const BoxDecoration(
           color: Colors.transparent,
         ),
-        child: Row(children: [
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
           SizedBox(
             width: isReply ? screenWidth - 100 : screenWidth * Constants.msgWidthScale,
             child: Text(

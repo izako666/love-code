@@ -46,6 +46,7 @@ class ImagePicker extends StatefulWidget {
 
 class _ImagePickerState extends State<ImagePicker> {
   bool selectingPhotos = true;
+  bool noImages = false;
   List<AssetPathEntity>? albums;
   AssetPathEntity? currentAlbum;
   List<AssetEntity>? currentPhotos = List.empty(growable: true);
@@ -72,6 +73,11 @@ class _ImagePickerState extends State<ImagePicker> {
 
   void loadData() async {
     List<AssetPathEntity> loadedAlbums = await IzPhotoManager.loadAlbums();
+    if (loadedAlbums.isEmpty) {
+      noImages = true;
+      setState(() {});
+      return;
+    }
     List<AssetEntity> photos = await IzPhotoManager.loadImages(loadedAlbums[0], 0, 24);
     albums = loadedAlbums;
     currentAlbum = albums![0];
@@ -108,122 +114,124 @@ class _ImagePickerState extends State<ImagePicker> {
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (albums == null || currentPhotos == null) const Center(child: CircularProgressIndicator()),
-          if (albums != null && currentPhotos != null) ...[
-            TextButton(
-              child: Row(
-                children: [
-                  Text(currentAlbum!.name,
-                      style: Theme.of(context).textTheme.labelLarge!.copyWith(fontSize: 18, decoration: TextDecoration.underline)),
-                  Icon(selectingPhotos ? Icons.arrow_drop_down_rounded : Icons.arrow_drop_up_rounded, color: Colors.white)
-                ],
-              ),
-              onPressed: () {
-                if (selectingPhotos) {
-                  loadedThumbnails = false;
-                  selectingPhotos = false;
-                } else {
-                  selectingPhotos = true;
-                }
-                setState(() {});
-              },
-            ),
-            const Divider(),
-            const SizedBox(
-              height: 16,
-            ),
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.45,
-              child: (currentPhotos == null)
-                  ? const Center(child: CircularProgressIndicator())
-                  : (selectingPhotos)
-                      ? GridView.builder(
-                          padding: EdgeInsets.zero,
-                          controller: imgScrollController,
-                          itemCount: loadingMoreImages
-                              ? ((currentPhotos!.length % 3) == 0
-                                  ? currentPhotos!.length + 3
-                                  : currentPhotos!.length + 3 + (currentPhotos!.length % 3))
-                              : currentPhotos!.length,
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
-                          itemBuilder: (ctx, i) {
-                            return (i < currentPhotos!.length)
-                                ? Padding(
-                                    padding: const EdgeInsets.all(0),
-                                    child: InkWell(
-                                      onTap: () {
-                                        if (widget.onImageTap != null) {
-                                          widget.onImageTap!(currentAlbum!, currentPhotos![i]);
-                                        }
-                                      },
-                                      child: AssetEntityImage(
-                                        currentPhotos![i],
-                                        isOriginal: false,
-                                        thumbnailSize: const ThumbnailSize.square(250),
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stacktrace) {
-                                          return const Center(child: Icon(Icons.error, color: Colors.red));
-                                        },
-                                      ),
-                                    ))
-                                : (i ==
-                                        currentPhotos!.length +
-                                            (((currentPhotos!.length % 3) == 0 ? 3 : 3 + (currentPhotos!.length % 3)) - 2))
-                                    ? const SizedBox(width: 50, height: 50, child: Center(child: CircularProgressIndicator()))
-                                    : Container(width: 50, height: 50, color: Colors.transparent);
-                          })
-                      : (loadedThumbnails && albumThumbnails != null)
-                          ? GridView.builder(
-                              shrinkWrap: true,
-                              itemCount: albums!.length,
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-                              itemBuilder: (ctx, i) {
-                                return Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: InkWell(
-                                      onTap: () {
-                                        currentAlbum = albums![i];
-                                        selectingPhotos = true;
-                                        setState(() {});
-                                      },
-                                      child: Flexible(
-                                        child: Container(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            children: [
-                                              SizedBox(
-                                                width: 180,
-                                                height: 150,
-                                                child: ClipRRect(
-                                                  clipBehavior: Clip.hardEdge,
-                                                  borderRadius: BorderRadius.circular(16),
-                                                  child: AssetEntityImage(
-                                                    albumThumbnails![i],
-                                                    isOriginal: false,
-                                                    fit: BoxFit.cover,
-                                                    thumbnailSize: const ThumbnailSize.square(360),
-                                                  ),
+      body: noImages
+          ? const Center(child: Text(Localization.noImages))
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (albums == null || currentPhotos == null) const Center(child: CircularProgressIndicator()),
+                if (albums != null && currentPhotos != null) ...[
+                  TextButton(
+                    child: Row(
+                      children: [
+                        Text(currentAlbum!.name,
+                            style: Theme.of(context).textTheme.labelLarge!.copyWith(fontSize: 18, decoration: TextDecoration.underline)),
+                        Icon(selectingPhotos ? Icons.arrow_drop_down_rounded : Icons.arrow_drop_up_rounded, color: Colors.white)
+                      ],
+                    ),
+                    onPressed: () {
+                      if (selectingPhotos) {
+                        loadedThumbnails = false;
+                        selectingPhotos = false;
+                      } else {
+                        selectingPhotos = true;
+                      }
+                      setState(() {});
+                    },
+                  ),
+                  const Divider(),
+                  const SizedBox(
+                    height: 16,
+                  ),
+                  SizedBox(
+                    height: MediaQuery.sizeOf(context).height * 0.45,
+                    child: (currentPhotos == null)
+                        ? const Center(child: CircularProgressIndicator())
+                        : (selectingPhotos)
+                            ? GridView.builder(
+                                padding: EdgeInsets.zero,
+                                controller: imgScrollController,
+                                itemCount: loadingMoreImages
+                                    ? ((currentPhotos!.length % 3) == 0
+                                        ? currentPhotos!.length + 3
+                                        : currentPhotos!.length + 3 + (currentPhotos!.length % 3))
+                                    : currentPhotos!.length,
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+                                itemBuilder: (ctx, i) {
+                                  return (i < currentPhotos!.length)
+                                      ? Padding(
+                                          padding: const EdgeInsets.all(0),
+                                          child: InkWell(
+                                            onTap: () {
+                                              if (widget.onImageTap != null) {
+                                                widget.onImageTap!(currentAlbum!, currentPhotos![i]);
+                                              }
+                                            },
+                                            child: AssetEntityImage(
+                                              currentPhotos![i],
+                                              isOriginal: false,
+                                              thumbnailSize: const ThumbnailSize.square(250),
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (context, error, stacktrace) {
+                                                return const Center(child: Icon(Icons.error, color: Colors.red));
+                                              },
+                                            ),
+                                          ))
+                                      : (i ==
+                                              currentPhotos!.length +
+                                                  (((currentPhotos!.length % 3) == 0 ? 3 : 3 + (currentPhotos!.length % 3)) - 2))
+                                          ? const SizedBox(width: 50, height: 50, child: Center(child: CircularProgressIndicator()))
+                                          : Container(width: 50, height: 50, color: Colors.transparent);
+                                })
+                            : (loadedThumbnails && albumThumbnails != null)
+                                ? GridView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: albums!.length,
+                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+                                    itemBuilder: (ctx, i) {
+                                      return Padding(
+                                          padding: const EdgeInsets.all(16),
+                                          child: InkWell(
+                                            onTap: () {
+                                              currentAlbum = albums![i];
+                                              selectingPhotos = true;
+                                              setState(() {});
+                                            },
+                                            child: Flexible(
+                                              child: Container(
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                                  children: [
+                                                    SizedBox(
+                                                      width: 180,
+                                                      height: 150,
+                                                      child: ClipRRect(
+                                                        clipBehavior: Clip.hardEdge,
+                                                        borderRadius: BorderRadius.circular(16),
+                                                        child: AssetEntityImage(
+                                                          albumThumbnails![i],
+                                                          isOriginal: false,
+                                                          fit: BoxFit.cover,
+                                                          thumbnailSize: const ThumbnailSize.square(360),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Text(albums![i].name, style: Theme.of(context).textTheme.titleSmall)
+                                                  ],
                                                 ),
                                               ),
-                                              Text(albums![i].name, style: Theme.of(context).textTheme.titleSmall)
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ));
-                              },
-                            )
-                          : const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-            )
-          ]
-        ],
-      ),
+                                            ),
+                                          ));
+                                    },
+                                  )
+                                : const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                  )
+                ]
+              ],
+            ),
     );
   }
 }
@@ -243,6 +251,7 @@ class ImageLcPicker extends StatefulWidget {
 
 class _ImageLcPickerState extends State<ImageLcPicker> {
   bool selectingPhotos = true;
+  bool noImages = false;
   List<AssetPathEntity>? albums;
   AssetPathEntity? currentAlbum;
   List<AssetEntity>? currentPhotos = List.empty(growable: true);
@@ -269,6 +278,10 @@ class _ImageLcPickerState extends State<ImageLcPicker> {
 
   void loadData() async {
     List<AssetPathEntity> loadedAlbums = await IzPhotoManager.loadAlbums();
+    if (loadedAlbums.isEmpty) {
+      noImages = true;
+      setState(() {});
+    }
     List<AssetEntity> photos = await IzPhotoManager.loadImages(loadedAlbums[0], 0, 24);
     albums = loadedAlbums;
     currentAlbum = albums![0];
@@ -324,130 +337,132 @@ class _ImageLcPickerState extends State<ImageLcPicker> {
             )
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (albums == null || currentPhotos == null) const Center(child: CircularProgressIndicator()),
-          if (albums != null && currentPhotos != null) ...[
-            TextButton(
-              child: Row(
-                children: [
-                  Text(currentAlbum!.name,
-                      style: Theme.of(context).textTheme.labelLarge!.copyWith(fontSize: 18, decoration: TextDecoration.underline)),
-                  Icon(selectingPhotos ? Icons.arrow_drop_down_rounded : Icons.arrow_drop_up_rounded, color: Colors.white)
-                ],
-              ),
-              onPressed: () {
-                if (selectingPhotos) {
-                  loadedThumbnails = false;
-                  selectingPhotos = false;
-                } else {
-                  selectingPhotos = true;
-                }
-                setState(() {});
-              },
-            ),
-            const Divider(),
-            const SizedBox(
-              height: 16,
-            ),
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.45,
-              child: (currentPhotos == null)
-                  ? const Center(child: CircularProgressIndicator())
-                  : (selectingPhotos)
-                      ? GridView.builder(
-                          padding: EdgeInsets.zero,
-                          controller: imgScrollController,
-                          itemCount: loadingMoreImages
-                              ? ((currentPhotos!.length % 3) == 0
-                                  ? currentPhotos!.length + 3
-                                  : currentPhotos!.length + 3 + (currentPhotos!.length % 3))
-                              : currentPhotos!.length,
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
-                          itemBuilder: (ctx, i) {
-                            return (i < currentPhotos!.length)
-                                ? Padding(
-                                    padding: const EdgeInsets.all(0),
-                                    child: InkWell(
-                                      onTap: () {
-                                        if (widget.onImageTap != null) {
-                                          widget.onImageTap!(currentAlbum!, currentPhotos![i]);
-                                          setState(() {});
-                                        }
-                                      },
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                            border: Border.all(
-                                                color: ChatController.instance().selectedImage.value == currentPhotos![i]
-                                                    ? Colors.blue
-                                                    : Colors.transparent)),
-                                        child: AssetEntityImage(
-                                          currentPhotos![i],
-                                          isOriginal: false,
-                                          thumbnailSize: const ThumbnailSize.square(250),
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stacktrace) {
-                                            return const Center(child: Icon(Icons.error, color: Colors.red));
-                                          },
-                                        ),
-                                      ),
-                                    ))
-                                : (i ==
-                                        currentPhotos!.length +
-                                            (((currentPhotos!.length % 3) == 0 ? 3 : 3 + (currentPhotos!.length % 3)) - 2))
-                                    ? const SizedBox(width: 50, height: 50, child: Center(child: CircularProgressIndicator()))
-                                    : Container(width: 50, height: 50, color: Colors.transparent);
-                          })
-                      : (loadedThumbnails && albumThumbnails != null)
-                          ? GridView.builder(
-                              shrinkWrap: true,
-                              itemCount: albums!.length,
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-                              itemBuilder: (ctx, i) {
-                                return Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: InkWell(
-                                      onTap: () {
-                                        currentAlbum = albums![i];
-                                        selectingPhotos = true;
-                                        setState(() {});
-                                      },
-                                      child: Flexible(
-                                        child: Container(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment: CrossAxisAlignment.center,
-                                            children: [
-                                              SizedBox(
-                                                width: 180,
-                                                height: 150,
-                                                child: ClipRRect(
-                                                  clipBehavior: Clip.hardEdge,
-                                                  borderRadius: BorderRadius.circular(16),
-                                                  child: AssetEntityImage(
-                                                    albumThumbnails![i],
-                                                    isOriginal: false,
-                                                    fit: BoxFit.cover,
-                                                    thumbnailSize: const ThumbnailSize.square(360),
-                                                  ),
+      body: noImages
+          ? const Center(child: Text(Localization.noImages))
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (albums == null || currentPhotos == null) const Center(child: CircularProgressIndicator()),
+                if (albums != null && currentPhotos != null) ...[
+                  TextButton(
+                    child: Row(
+                      children: [
+                        Text(currentAlbum!.name,
+                            style: Theme.of(context).textTheme.labelLarge!.copyWith(fontSize: 18, decoration: TextDecoration.underline)),
+                        Icon(selectingPhotos ? Icons.arrow_drop_down_rounded : Icons.arrow_drop_up_rounded, color: Colors.white)
+                      ],
+                    ),
+                    onPressed: () {
+                      if (selectingPhotos) {
+                        loadedThumbnails = false;
+                        selectingPhotos = false;
+                      } else {
+                        selectingPhotos = true;
+                      }
+                      setState(() {});
+                    },
+                  ),
+                  const Divider(),
+                  const SizedBox(
+                    height: 16,
+                  ),
+                  SizedBox(
+                    height: MediaQuery.sizeOf(context).height * 0.45,
+                    child: (currentPhotos == null)
+                        ? const Center(child: CircularProgressIndicator())
+                        : (selectingPhotos)
+                            ? GridView.builder(
+                                padding: EdgeInsets.zero,
+                                controller: imgScrollController,
+                                itemCount: loadingMoreImages
+                                    ? ((currentPhotos!.length % 3) == 0
+                                        ? currentPhotos!.length + 3
+                                        : currentPhotos!.length + 3 + (currentPhotos!.length % 3))
+                                    : currentPhotos!.length,
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+                                itemBuilder: (ctx, i) {
+                                  return (i < currentPhotos!.length)
+                                      ? Padding(
+                                          padding: const EdgeInsets.all(0),
+                                          child: InkWell(
+                                            onTap: () {
+                                              if (widget.onImageTap != null) {
+                                                widget.onImageTap!(currentAlbum!, currentPhotos![i]);
+                                                setState(() {});
+                                              }
+                                            },
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                      color: ChatController.instance().selectedImage.value == currentPhotos![i]
+                                                          ? Colors.blue
+                                                          : Colors.transparent)),
+                                              child: AssetEntityImage(
+                                                currentPhotos![i],
+                                                isOriginal: false,
+                                                thumbnailSize: const ThumbnailSize.square(250),
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (context, error, stacktrace) {
+                                                  return const Center(child: Icon(Icons.error, color: Colors.red));
+                                                },
+                                              ),
+                                            ),
+                                          ))
+                                      : (i ==
+                                              currentPhotos!.length +
+                                                  (((currentPhotos!.length % 3) == 0 ? 3 : 3 + (currentPhotos!.length % 3)) - 2))
+                                          ? const SizedBox(width: 50, height: 50, child: Center(child: CircularProgressIndicator()))
+                                          : Container(width: 50, height: 50, color: Colors.transparent);
+                                })
+                            : (loadedThumbnails && albumThumbnails != null)
+                                ? GridView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: albums!.length,
+                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+                                    itemBuilder: (ctx, i) {
+                                      return Padding(
+                                          padding: const EdgeInsets.all(16),
+                                          child: InkWell(
+                                            onTap: () {
+                                              currentAlbum = albums![i];
+                                              selectingPhotos = true;
+                                              setState(() {});
+                                            },
+                                            child: Flexible(
+                                              child: Container(
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                                  children: [
+                                                    SizedBox(
+                                                      width: 180,
+                                                      height: 150,
+                                                      child: ClipRRect(
+                                                        clipBehavior: Clip.hardEdge,
+                                                        borderRadius: BorderRadius.circular(16),
+                                                        child: AssetEntityImage(
+                                                          albumThumbnails![i],
+                                                          isOriginal: false,
+                                                          fit: BoxFit.cover,
+                                                          thumbnailSize: const ThumbnailSize.square(360),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Text(albums![i].name, style: Theme.of(context).textTheme.titleSmall)
+                                                  ],
                                                 ),
                                               ),
-                                              Text(albums![i].name, style: Theme.of(context).textTheme.titleSmall)
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ));
-                              },
-                            )
-                          : const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-            )
-          ]
-        ],
-      ),
+                                            ),
+                                          ));
+                                    },
+                                  )
+                                : const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                  )
+                ]
+              ],
+            ),
     );
   }
 }

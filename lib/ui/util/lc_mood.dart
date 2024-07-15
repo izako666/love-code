@@ -32,7 +32,11 @@ class _LcMoodSetterState extends State<LcMoodSetter> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text("What's your mood right now?", style: Theme.of(context).textTheme.headlineMedium),
+        Text(
+          "What's your mood right now?",
+          style: Theme.of(context).textTheme.headlineMedium,
+          textAlign: TextAlign.center,
+        ),
         const SizedBox(height: 16),
         Container(
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(32), color: backgroundColor),
@@ -75,21 +79,23 @@ class _LcMoodSetterState extends State<LcMoodSetter> {
                           },
                         ),
                 ),
-                Container(
-                  width: 300,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(32),
-                    color: backgroundColor.withAlpha(120),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: TextField(
-                      controller: messageController,
-                      maxLength: 32,
-                      decoration: const InputDecoration(
-                        hintText: "How are you feeling?",
+                Expanded(
+                  child: Container(
+                    width: 120,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(32),
+                      color: backgroundColor.withAlpha(120),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        controller: messageController,
+                        maxLength: 32,
+                        decoration: const InputDecoration(
+                          hintText: "How are you feeling?",
+                        ),
+                        style: Theme.of(context).textTheme.bodyLarge,
                       ),
-                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ),
                 ),
