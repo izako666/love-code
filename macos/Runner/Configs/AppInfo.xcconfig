@@ -8,7 +8,7 @@
 PRODUCT_NAME = love_code
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.loveCode
+PRODUCT_BUNDLE_IDENTIFIER = com.izako666.loveCode
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2024 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2024 com.izako666. All rights reserved.

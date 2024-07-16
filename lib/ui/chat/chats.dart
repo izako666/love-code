@@ -224,7 +224,8 @@ class _ChatScreenState extends State<ChatScreen> {
                             },
                           ))
                     ],
-                    if (_controller.text.startsWith('/')) ...[
+                    if (_controller.text.startsWith('/') &&
+                        !(availableCommands.length == 1 && _controller.text.startsWith('/${availableCommands[0].id}'))) ...[
                       Positioned(
                           bottom: 0,
                           left: 0,

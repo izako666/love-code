@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:782004681626:android:fc5ee3abd0c8c7e39dd823",
         "android_client_info": {
-          "package_name": "com.example.love_code"
+          "package_name": "com.izako666.love_code"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "782004681626-pk9s299lkh436hdjb5lnv3u4s2r8na3f.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.love_code",
+            "package_name": "com.izako666.love_code",
             "certificate_hash": "309e5e5cf53f375f6a625e715b30ec479d9cd8e1"
           }
         },
@@ -42,7 +42,7 @@
               "client_id": "782004681626-k41hlmft98otcv9ipu0o2b60qfhgo79m.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.loveCode"
+                "bundle_id": "com.izako666.loveCode"
               }
             }
           ]
