@@ -122,7 +122,7 @@ class ChatController extends GetxController {
     });
   }
 
-  void deleteChat() async {
+  Future<void> deleteChat() async {
     await FirestoreHandler.instance().deleteChat(chatRoom.value!);
     chatRoom.value = null;
     Get.toNamed(RouteConstants.makeRoom);

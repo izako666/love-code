@@ -60,4 +60,6 @@ class Localization {
 
   static const addSticker = 'Add a new sticker';
   static const noImages = 'You have no Images';
+
+  static const deleteAccount = 'Delete Account';
 }

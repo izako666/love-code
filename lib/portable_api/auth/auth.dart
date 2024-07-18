@@ -9,14 +9,14 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:love_code/constants.dart';
 import 'package:love_code/localization.dart';
 import 'package:love_code/navigation/routes.dart';
+import 'package:love_code/portable_api/chat/state/chat_controller.dart';
 import 'package:love_code/portable_api/networking/firestore_handler.dart';
 
 class Auth extends GetxController {
   final FirebaseAuth _instance = FirebaseAuth.instance;
   static Auth instance() => Get.find<Auth>();
   Rx<User?> user = Rx<User?>(null);
-  Rx<DocumentSnapshot<Map<String, dynamic>>?> userData =
-      Rx<DocumentSnapshot<Map<String, dynamic>>?>(null);
+  Rx<DocumentSnapshot<Map<String, dynamic>>?> userData = Rx<DocumentSnapshot<Map<String, dynamic>>?>(null);
   RxBool queueVerify = false.obs;
   late final GoogleSignIn googleSignIn;
   @override
@@ -29,12 +29,8 @@ class Auth extends GetxController {
   }
 
   void exposeUserData() {
-    FirestoreHandler.instance()
-        .db
-        .collection(Constants.fireStoreUsers)
-        .doc(user.value!.uid)
-        .snapshots(includeMetadataChanges: true)
-        .listen((d) {
+    FirestoreHandler.instance().db.collection(Constants.fireStoreUsers).doc(user.value!.uid).snapshots(includeMetadataChanges: true).listen(
+        (d) {
       userData.value = d;
       Get.log('user Data updated');
     }, onError: (a, b) {
@@ -61,8 +57,7 @@ class Auth extends GetxController {
   }
 
   Future<UserCredential?> signInWithEmail(String email, String password) async {
-    return await _instance.signInWithEmailAndPassword(
-        email: email, password: password);
+    return await _instance.signInWithEmailAndPassword(email: email, password: password);
   }
 
   Future<UserCredential?> signInWithGoogle() async {
@@ -76,25 +71,16 @@ class Auth extends GetxController {
       accessToken: authentication.accessToken,
     );
     UserCredential user = await _instance.signInWithCredential(provider);
-    await FirestoreHandler.instance().createUserDoc(
-        user.user!.uid, user.additionalUserInfo?.username ?? "No Name");
+    await FirestoreHandler.instance().createUserDoc(user.user!.uid, user.additionalUserInfo?.username ?? "No Name");
     return user;
   }
 
   Future<void> setName(String newUserName) async {
-    await FirestoreHandler.instance()
-        .db
-        .collection(Constants.fireStoreUsers)
-        .doc(user.value!.uid)
-        .update({'userName': newUserName});
+    await FirestoreHandler.instance().db.collection(Constants.fireStoreUsers).doc(user.value!.uid).update({'userName': newUserName});
   }
 
   Stream<DocumentSnapshot<Map<String, dynamic>>> userStream() {
-    return FirestoreHandler.instance()
-        .db
-        .collection(Constants.fireStoreUsers)
-        .doc(user.value!.uid)
-        .snapshots(includeMetadataChanges: true);
+    return FirestoreHandler.instance().db.collection(Constants.fireStoreUsers).doc(user.value!.uid).snapshots(includeMetadataChanges: true);
   }
 
   Future<void> signOut() async {
@@ -104,12 +90,10 @@ class Auth extends GetxController {
     await _instance.signOut();
   }
 
-  Future<Either<UserCredential?, String>> signUp(
-      String email, String password, String userName) async {
+  Future<Either<UserCredential?, String>> signUp(String email, String password, String userName) async {
     //FirestoreHandler.instance().signUpUser(email, userName);
     try {
-      var user = await _instance.createUserWithEmailAndPassword(
-          email: email, password: password);
+      var user = await _instance.createUserWithEmailAndPassword(email: email, password: password);
       await FirestoreHandler.instance().createUserDoc(user.user!.uid, userName);
       return Left(user);
     } on FirebaseAuthException catch (e) {
@@ -146,14 +130,16 @@ class Auth extends GetxController {
   }
 
   Future<DocumentSnapshot<Map<String, dynamic>>> getUserDoc() async {
-    return await FirestoreHandler.instance()
-        .db
-        .collection(Constants.fireStoreUsers)
-        .doc(user.value!.uid)
-        .get();
+    return await FirestoreHandler.instance().db.collection(Constants.fireStoreUsers).doc(user.value!.uid).get();
   }
 
   Future<void> setMood(String emoji, String moodText) async {
     await FirestoreHandler.instance().setUserMood(emoji, moodText);
+  }
+
+  Future<void> deleteAccount() async {
+    await ChatController.instance().deleteChat();
+
+    await _instance.currentUser?.delete();
   }
 }

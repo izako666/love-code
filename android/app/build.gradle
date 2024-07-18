@@ -2,6 +2,7 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
+    id 'com.google.gms.google-services'
 }
 
 def localProperties = new Properties()
@@ -92,6 +93,6 @@ flutter {
 dependencies {
     implementation 'androidx.cardview:cardview:1.0.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
-
+    
 }
 

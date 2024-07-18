@@ -314,6 +314,37 @@ class _LcMenuDrawerState extends State<LcMenuDrawer> {
                     },
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0, bottom: 16),
+                  child: ListTile(
+                    leading: const Icon(Icons.delete),
+                    title: const Text(Localization.deleteAccount),
+                    onTap: () {
+                      showLcDialog(title: Localization.deleteAccount, desc: Localization.confirmDecision, actions: [
+                        LcButton(
+                          width: 100.w,
+                          height: 35.w,
+                          text: Localization.deleteAccount,
+                          onPressed: () {
+                            Navigator.pop(context);
+                            WidgetsBinding.instance.addPostFrameCallback((_) async {
+                              await Auth.instance().deleteAccount();
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 16),
+                        LcButton(
+                          width: 100.w,
+                          height: 35.w,
+                          text: 'Cancel',
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        )
+                      ]);
+                    },
+                  ),
+                ),
               ],
             ),
     );
