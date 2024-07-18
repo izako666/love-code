@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:love_code/localization.dart';
+import 'package:love_code/navigation/routes.dart';
 import 'package:love_code/portable_api/auth/auth.dart';
 import 'package:love_code/portable_api/chat/state/chat_controller.dart';
 import 'package:love_code/portable_api/emoji_manager.dart';
@@ -328,7 +329,10 @@ class _LcMenuDrawerState extends State<LcMenuDrawer> {
                           onPressed: () {
                             Navigator.pop(context);
                             WidgetsBinding.instance.addPostFrameCallback((_) async {
-                              await Auth.instance().deleteAccount();
+                              dynamic success = await Get.toNamed(RouteConstants.reAuth);
+                              if (success != null && success) {
+                                await Auth.instance().deleteAccount();
+                              }
                             });
                           },
                         ),

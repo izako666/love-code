@@ -77,7 +77,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: false
-  image_path: "assets/logos/icons8-heart-96.png"
+  image_path: "assets/logos/love_code_upres_icon_no_g.png"
   android_adaptive_icon_background: "#FF151519" # Set your desired background color
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

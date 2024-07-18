@@ -62,4 +62,5 @@ class Localization {
   static const noImages = 'You have no Images';
 
   static const deleteAccount = 'Delete Account';
+  static const logInAgain = 'You need to log in again in order to delete your account';
 }

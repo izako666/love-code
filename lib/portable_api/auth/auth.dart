@@ -61,10 +61,16 @@ class Auth extends GetxController {
   }
 
   Future<UserCredential?> signInWithGoogle() async {
-    GoogleSignInAccount? acc = await googleSignIn.signIn();
-    if (acc == null) {
+    GoogleSignInAccount? acc;
+    try {
+      acc = await googleSignIn.signIn();
+      if (acc == null) {
+        return Future.value(null);
+      }
+    } catch (e) {
       return Future.value(null);
     }
+
     GoogleSignInAuthentication authentication = await acc.authentication;
     OAuthCredential provider = GoogleAuthProvider.credential(
       idToken: authentication.idToken,
@@ -86,6 +92,11 @@ class Auth extends GetxController {
   Future<void> signOut() async {
     if (googleSignIn.currentUser != null) {
       await googleSignIn.signOut();
+      try {
+        await GoogleSignIn().disconnect();
+      } catch (e) {
+        Get.log('failed to disconnect on signout');
+      }
     }
     await _instance.signOut();
   }
@@ -138,7 +149,16 @@ class Auth extends GetxController {
   }
 
   Future<void> deleteAccount() async {
-    await ChatController.instance().deleteChat();
+    try {
+      await ChatController.instance().deleteChat();
+    } catch (e) {
+      //do nothing
+    }
     await _instance.currentUser?.delete();
+    try {
+      await googleSignIn.disconnect();
+    } catch (e) {
+      Get.log('failed to disconnect on signout');
+    }
   }
 }

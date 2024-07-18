@@ -44,7 +44,7 @@ class _MakeRoomScreenState extends State<MakeRoomScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showLcDialog(title: Localization.plsVerifyEmail, desc: Localization.needToConfirmYou, actions: [
           LcButton(
-            width: 75.w,
+            width: 100.w,
             height: 35.w,
             text: Localization.verify,
             onPressed: () async {
@@ -54,8 +54,9 @@ class _MakeRoomScreenState extends State<MakeRoomScreen> {
               Navigator.pop(context);
             },
           ),
+          const SizedBox(width: 4),
           LcButton(
-            width: 75.w,
+            width: 100.w,
             height: 35.w,
             text: Localization.later,
             onPressed: () {

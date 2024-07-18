@@ -16,15 +16,17 @@ class _HomeLoadingScreenState extends State<HomeLoadingScreen> {
   @override
   void initState() {
     super.initState();
-    _chatController = Get.put<ChatController>(ChatController());
-    _chatController.findingChatRoom.listen((d) {
-      if (!d) {
-        if (_chatController.chatRoom.value != null) {
-          Get.toNamed(RouteConstants.chats);
-        } else {
-          Get.toNamed(RouteConstants.makeRoom);
+    Get.delete<ChatController>().whenComplete(() {
+      _chatController = Get.put<ChatController>(ChatController());
+      _chatController.findingChatRoom.listen((d) {
+        if (!d) {
+          if (_chatController.chatRoom.value != null) {
+            Get.toNamed(RouteConstants.chats);
+          } else {
+            Get.toNamed(RouteConstants.makeRoom);
+          }
         }
-      }
+      });
     });
   }
 
