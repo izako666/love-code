@@ -161,6 +161,12 @@ class FirestoreHandler extends GetxController {
   }
 
   Future<void> deleteChat(String chatRoom) async {
+    CollectionReference<Map<String, dynamic>> collection =
+        db.collection(Constants.fireStoreRooms).doc(chatRoom).collection(Constants.msgBox);
+    QuerySnapshot<Map<String, dynamic>> snapshots = await collection.get();
+    for (QueryDocumentSnapshot doc in snapshots.docs) {
+      await doc.reference.delete();
+    }
     await db.collection(Constants.fireStoreRooms).doc(chatRoom).delete();
   }
 

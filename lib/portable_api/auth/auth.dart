@@ -139,7 +139,6 @@ class Auth extends GetxController {
 
   Future<void> deleteAccount() async {
     await ChatController.instance().deleteChat();
-
     await _instance.currentUser?.delete();
   }
 }
